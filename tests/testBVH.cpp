@@ -1,13 +1,18 @@
 #include "common/BVH.h"
 #include "objects/Sphere.h"
+#include "objects/Triangle.h"
 #include "Scene.h"
 #include "Renderer.h"
 
 void testSingle();
+void testSphereBVH();
+void testTriangleBVH();
 
 int main()
 {
     testSingle();
+    testSphereBVH();
+    testTriangleBVH();
     return 0;
 }
 
@@ -25,27 +30,39 @@ void testSingle()
         std::cout << "right = " << res->right->aabb << std::endl;
 }
 
-void testBVHRender()
+void testSphereBVH()
 {
     BVHScene scene(1280, 900);
-    std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
-    sph1->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
-    sph1->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
+    std::shared_ptr<Object> sph = std::make_shared<Sphere>(cv::Vec3f(0, 0, 0), 1);
+    sph->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
+    sph->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
 
-    std::shared_ptr<Object> sph2 = std::make_shared<Sphere>(cv::Vec3f(0.5, -0.5, -8), 1.5);
-    sph2->setIor(1.5);
-    sph2->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
-
-    scene.add(std::move(sph1));
-    scene.add(std::move(sph2));
-
-    scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), cv::Vec3f(0.5, 0.5, 0.5)));
-    scene.add(std::make_shared<Light>(cv::Vec3f(30, 50, -12), cv::Vec3f(0.5, 0.5, 0.5)));
+    scene.add(std::move(sph));
 
     scene.buildBVH();
+    std::optional<HitPayload> res = scene.intersect(Ray(cv::Vec3f(0, 0, 0), cv::Vec3f(0.132292, 0.0427083, -1)));
+    if (res.has_value())
+    {
+        std::cout << "Hit!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Miss!" << std::endl;
+    }
+}
 
-    Renderer renderer;
-    
-    cv::Mat img = renderer.render(scene);
-    cv::imwrite("testRender.png", img);
+void testTriangleBVH()
+{
+    std::optional<std::vector<Triangle>> triangles = Triangle::loadModel("models/bunny.obj");
+    if (!triangles.has_value())
+    {
+        std::cout << "Failed to load model" << std::endl;
+        return;
+    }
+    BVHScene scene(800, 600);
+    for (const auto &tri : triangles.value())
+    {
+        scene.add(std::make_shared<Triangle>(tri));
+    }
+    scene.buildBVH();
 }

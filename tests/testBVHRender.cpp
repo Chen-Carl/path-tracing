@@ -6,7 +6,7 @@
 
 int main()
 {
-    Scene scene(1280, 960);
+    BVHScene scene(1280, 960);
     std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
     sph1->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
     sph1->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
@@ -53,12 +53,15 @@ int main()
     scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), cv::Vec3f(0.5, 0.5, 0.5)));
     scene.add(std::make_shared<Light>(cv::Vec3f(30, 50, -12), cv::Vec3f(0.5, 0.5, 0.5)));
 
+    scene.buildBVH();
+
     Renderer renderer;
     cv::Mat3f res = renderer.render(scene);
-    cv::imwrite("testRender.png", res * 255);
+    cv::imwrite("testBVHRender.png", res * 255);
 
     // cv::Vec3f color = scene.castRay(cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, -1), 0);
     // std::cout << color << std::endl;
 
+    
     return 0;
 }

@@ -1,4 +1,6 @@
+#include <cmath>
 #include "objects/Triangle.h"
+#include "common/OBJ_Loader.h"
 #include "Triangle.h"
 
 Triangle::Triangle()
@@ -12,8 +14,10 @@ Triangle::Triangle(const std::array<cv::Vec3f, 3> &vertices) :
 
 }
 
-std::optional<HitPayload> Triangle::intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const
+std::optional<HitPayload> Triangle::intersect(const Ray &ray) const
 {
+    const cv::Vec3f &orig = ray.getOrig();
+    const cv::Vec3f &dir = ray.getDir();
     cv::Vec3f edge1 = m_vertices[1] - m_vertices[0];
     cv::Vec3f edge2 = m_vertices[2] - m_vertices[0];
     cv::Vec3f s = orig - m_vertices[0];
@@ -55,4 +59,49 @@ cv::Vec3f Triangle::getNormal(const cv::Vec3f &point) const
     cv::Vec3f normal = v0.cross(v1);
     normal = normal / cv::norm(normal);
     return normal;
+}
+
+cv::Vec3f Triangle::getDiffuseColor(const cv::Vec2f &st) const
+{
+    cv::Vec3f color1(0.031, 0.235, 0.815);
+    cv::Vec3f color2(0.231, 0.937, 0.937);
+    float scale = 5;
+    float pattern = (std::fmod(st[0] * scale, 1) > 0.5) ^ (std::fmod(st[1] * scale, 1) > 0.5);
+    return (1 - pattern) * color1 + pattern * color2;
+}
+
+cv::Vec2f Triangle::getStCoords(const cv::Vec2f &uv) const
+{
+    const cv::Vec2f &st0 = m_stCoords[0];
+    const cv::Vec2f &st1 = m_stCoords[1];
+    const cv::Vec2f &st2 = m_stCoords[2];
+    cv::Vec2f st = (1 - uv[0] - uv[1]) * st0 + uv[0] * st1 + uv[1] * st2;
+    return st;
+}
+
+std::optional<std::vector<Triangle>> Triangle::loadModel(const std::string &filepath)
+{
+    objl::Loader loader;
+    if (!loader.LoadFile(filepath))
+    {
+        std::cout << "Failed to load model: " << filepath << std::endl;
+        return std::nullopt;
+    }
+    std::vector<Triangle> triangles;
+    for (const auto &mesh : loader.LoadedMeshes)
+    {
+        for (size_t i = 0; i < mesh.Vertices.size(); i += 3)
+        {
+            std::shared_ptr<Triangle> triangle = std::make_shared<Triangle>();
+            for (int j = 0; j < 3; j++)
+            {
+                triangle->setVertex(j, cv::Vec3f(mesh.Vertices[i + j].Position.X, mesh.Vertices[i + j].Position.Y, mesh.Vertices[i + j].Position.Z));
+                triangle->setNormal(j, cv::Vec3f(mesh.Vertices[i + j].Normal.X, mesh.Vertices[i + j].Normal.Y, mesh.Vertices[i + j].Normal.Z));
+                triangle->setTexCoord(j, cv::Vec2f(mesh.Vertices[i + j].TextureCoordinate.X, mesh.Vertices[i + j].TextureCoordinate.Y));
+            }
+            triangles.push_back(*triangle);
+        }
+    }
+    std::cout << "Loaded " << triangles.size() << " triangles" << std::endl;
+    return triangles;
 }

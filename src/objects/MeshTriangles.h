@@ -15,11 +15,9 @@ public:
 
     virtual ~MeshTriangles() = default;
 
-    virtual std::optional<HitPayload> intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const override;
+    virtual std::optional<HitPayload> intersect(const Ray &ray) const override;
 
     virtual AABB getAABB() const override;
-
-    static std::optional<std::vector<Triangle>> loadModel(const std::string &filepath);
 };
 
 #endif

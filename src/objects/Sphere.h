@@ -12,7 +12,7 @@ private:
 public:
     Sphere(const cv::Vec3f &center, float radius);
 
-    virtual std::optional<HitPayload> intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const override;
+    virtual std::optional<HitPayload> intersect(const Ray &ray) const override;
 
     virtual AABB getAABB() const override;
 

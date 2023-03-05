@@ -2,6 +2,7 @@
 #define __COMMON_AABB_H__
 
 #include <opencv2/opencv.hpp>
+#include "common/Ray.h"
 
 class AABB
 {
@@ -17,7 +18,7 @@ public:
     cv::Vec3f getDiagonal() const { return m_max - m_min; }
     int getLargestAxis() const;
 
-    bool intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const;
+    bool intersect(const Ray &ray) const;
 
     AABB operator+(const AABB &other) const;
     AABB operator+(const cv::Vec3f &vec) const;

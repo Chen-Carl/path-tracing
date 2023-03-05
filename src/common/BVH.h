@@ -2,7 +2,8 @@
 #define __COMMON_BVH_H__
 
 #include <memory>
-#include "AABB.h"
+#include "common/AABB.h"
+#include "common/Ray.h"
 #include "objects/HitPayload.h"
 
 class Object;
@@ -33,9 +34,9 @@ public:
 
     std::shared_ptr<BVHNode> getRoot() const { return m_root; }
 
-    std::optional<HitPayload> intersect(const cv::Vec3f &orig, const cv::Vec3f &dir);
+    std::optional<HitPayload> intersect(const Ray &ray);
 
-    static std::optional<HitPayload> intersect(const std::shared_ptr<BVHNode> &node, const cv::Vec3f &orig, const cv::Vec3f &dir);
+    static std::optional<HitPayload> intersect(const std::shared_ptr<BVHNode> &node, const Ray &ray);
 };
 
 #endif

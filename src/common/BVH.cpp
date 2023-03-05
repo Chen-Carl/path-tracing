@@ -45,27 +45,27 @@ std::shared_ptr<BVH::BVHNode> BVH::init(obj_iter begin, obj_iter end)
     return node;
 }
 
-std::optional<HitPayload> BVH::intersect(const cv::Vec3f &orig, const cv::Vec3f &dir)
+std::optional<HitPayload> BVH::intersect(const Ray &ray)
 {
     if (!m_root)
     {
         return std::nullopt;
     }
-    return intersect(m_root, orig, dir);
+    return intersect(m_root, ray);
 }
 
-std::optional<HitPayload> BVH::intersect(const std::shared_ptr<BVHNode> &node, const cv::Vec3f &orig, const cv::Vec3f &dir)
+std::optional<HitPayload> BVH::intersect(const std::shared_ptr<BVHNode> &node, const Ray &ray)
 {
-    if (!node || !node->aabb.intersect(orig, dir))
+    if (!node || !node->aabb.intersect(ray))
     {
         return std::nullopt;
     }
     if (node->left == nullptr && node->right == nullptr)
     {
-        return node->obj->intersect(orig, dir);
+        return node->obj->intersect(ray);
     }
-    std::optional<HitPayload> left = intersect(node->left, orig, dir);
-    std::optional<HitPayload> right = intersect(node->right, orig, dir);
+    std::optional<HitPayload> left = intersect(node->left, ray);
+    std::optional<HitPayload> right = intersect(node->right, ray);
     if (left && right)
     {
         return left->dist < right->dist ? left : right;

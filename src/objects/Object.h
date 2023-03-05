@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "common/AABB.h"
+#include "common/Ray.h"
 #include "objects/HitPayload.h"
 
 class Object : public std::enable_shared_from_this<const Object>
@@ -33,16 +34,17 @@ public:
      * @param orig The origin of the ray
      * @param dir The direction of the ray
      */
-    virtual std::optional<HitPayload> intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const = 0;
+    virtual std::optional<HitPayload> intersect(const Ray &ray) const = 0;
 
     virtual AABB getAABB() const = 0;
 
     virtual MaterialType getMaterialType() const { return m_materialType; }
-    virtual cv::Vec3f getDiffuseColor() const { return m_diffuseColor; }
+    virtual cv::Vec3f getDiffuseColor(const cv::Vec2f &st) const { return m_diffuseColor; }
     virtual float getIor() const { return m_ior; }
     virtual float getSpecularExp() const { return m_specularExp; }
     virtual float getKd() const { return m_kd; }
     virtual float getKs() const { return m_ks; }
+    virtual cv::Vec2f getStCoords(const cv::Vec2f &uv) const { return cv::Vec2f(0.0, 0.0); }
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const = 0;
 
     virtual void setMaterialType(MaterialType materialType) { m_materialType = materialType; }

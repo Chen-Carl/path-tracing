@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "common/BVH.h"
+#include "common/Camera.h"
 #include "objects/Object.h"
 #include "Light.h"
 
@@ -13,8 +14,9 @@ private:
     int m_height = 960;
     float m_fov = 90.0f;
     int m_maxDepth = 5;
-    double epsilon = 0.00001;
+    double m_epsilon = 0.00001;
     cv::Vec3f m_bgColor;
+    cv::Vec3f m_eyePos;
 
     std::vector<std::shared_ptr<Object>> m_objects;
     std::vector<std::shared_ptr<Light>> m_lights;
@@ -22,17 +24,39 @@ private:
 public:
     Scene(int width = 1280, int height = 960);
 
-    void add(std::shared_ptr<Object> object);
-    void add(std::shared_ptr<Light> light);
+    virtual void add(std::shared_ptr<Object> object);
+    virtual void add(std::shared_ptr<Light> light);
 
+    /**
+     * @brief Cast a ray into the scene and return the color of the first object hit.
+     * @param eyePos The position of the camera.
+     * @param dir The direction of the ray (pixel - camera).
+     * @param scene The scene to cast the ray into.
+     * @param depth The number of bounces of the ray.
+     * @return The color of the first object hit.
+    */
+    virtual cv::Vec3f castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir,  int depth) const;
+
+    /**
+     * @brief Trace a ray into the scene and return the closest object hit.
+     * @param orig The origin of the ray.
+     * @param dir The direction of the ray.
+     * @param objects The objects to trace the ray into.
+     * @return The closest object hit.
+    */
+    virtual std::optional<HitPayload> trace(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects) const;
+
+    const cv::Vec3f &getBgColor() const { return m_bgColor; }
+    double getEpsilon() const { return m_epsilon; }
     const std::vector<std::shared_ptr<Object>> &getObjects() const { return m_objects; }
     const std::vector<std::shared_ptr<Light>> &getLights() const { return m_lights; }
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
     float getFov() const { return m_fov; }
     int getMaxDepth() const { return m_maxDepth; }
-    double getEpsilon() const { return epsilon; }
-    const cv::Vec3f &getBgColor() const { return m_bgColor; }
+    const cv::Vec3f &getEyePos() const { return m_eyePos; }
+
+    void setCamera(const Camera &camera);
 };
 
 class BVHScene : public Scene
@@ -40,10 +64,16 @@ class BVHScene : public Scene
 private:
     std::shared_ptr<BVH> m_bvh;
 
+    std::optional<HitPayload> intersect(const Ray &ray) const;
+
 public:
     BVHScene(int width = 1280, int height = 960);
 
     void buildBVH();
+
+    virtual cv::Vec3f castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const;
+
+    friend void testSphereBVH();
 };
 
 #endif

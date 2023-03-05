@@ -26,8 +26,10 @@ int AABB::getLargestAxis() const
         return 2;
 }
 
-bool AABB::intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const
+bool AABB::intersect(const Ray &ray) const
 {
+    const cv::Vec3f &orig = ray.getOrig();
+    const cv::Vec3f &dir = ray.getDir();
     float enter = std::numeric_limits<float>::lowest();
     float exit = std::numeric_limits<float>::max();
     std::vector<bool> neg {
@@ -40,16 +42,8 @@ bool AABB::intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const
     {
         float t1 = (m_min[i] - orig[i]) / dir[i];
         float t2 = (m_max[i] - orig[i]) / dir[i];
-        if (!neg[i])
-        {
-            enter = std::max(enter, t1);
-            exit = std::min(exit, t2);
-        }
-        else
-        {
-            enter = std::max(enter, t2);
-            exit = std::min(exit, t1);
-        }
+        enter = std::max(enter, neg[i] ? t1 : t2);
+        exit = std::min(exit, neg[i] ? t2 : t1);
     }
     return enter < exit && exit >= 0;
 }

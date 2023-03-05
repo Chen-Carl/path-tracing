@@ -7,8 +7,10 @@ Sphere::Sphere(const cv::Vec3f &center, float radius)
     m_radius = radius;
 }
 
-std::optional<HitPayload> Sphere::intersect(const cv::Vec3f &orig, const cv::Vec3f &dir) const
+std::optional<HitPayload> Sphere::intersect(const Ray &ray) const
 {
+    const cv::Vec3f &orig = ray.getOrig();
+    const cv::Vec3f &dir = ray.getDir();
     float a = dir.dot(dir);
     float b = 2 * dir.dot(orig - m_center);
     float c = (orig - m_center).dot(orig - m_center) - m_radius * m_radius;
