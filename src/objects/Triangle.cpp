@@ -63,6 +63,12 @@ cv::Vec3f Triangle::getNormal(const cv::Vec3f &point) const
 
 cv::Vec3f Triangle::getDiffuseColor(const cv::Vec2f &st) const
 {
+    cv::Vec3f color = Object::getDiffuseColor(st);
+    if (color != cv::Vec3f(0, 0, 0))
+    {
+        return color;
+    }
+    
     cv::Vec3f color1(0.031, 0.235, 0.815);
     cv::Vec3f color2(0.231, 0.937, 0.937);
     float scale = 5;

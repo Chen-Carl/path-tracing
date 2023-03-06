@@ -15,7 +15,7 @@ public:
         m_orig(orig),
         m_dir(dir)
     {
-        // m_dir = cv::normalize(m_dir);
+        m_dir = cv::normalize(m_dir);
     }
 
     const cv::Vec3f &getOrig() const { return m_orig; }

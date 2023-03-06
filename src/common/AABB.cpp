@@ -45,7 +45,7 @@ bool AABB::intersect(const Ray &ray) const
         enter = std::max(enter, neg[i] ? t1 : t2);
         exit = std::min(exit, neg[i] ? t2 : t1);
     }
-    return enter < exit && exit >= 0;
+    return enter <= exit && exit >= 0;
 }
 
 AABB AABB::operator+(const AABB &other) const

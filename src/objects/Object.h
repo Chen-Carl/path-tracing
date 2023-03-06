@@ -50,6 +50,9 @@ public:
     virtual void setMaterialType(MaterialType materialType) { m_materialType = materialType; }
     virtual void setDiffuseColor(const cv::Vec3f &diffuseColor) { m_diffuseColor = diffuseColor; }
     virtual void setIor(float ior) { m_ior = ior; }
+    virtual void setKd(float kd) { m_kd = kd; }
+    virtual void setKs(float ks) { m_ks = ks; }
+    virtual void setSpecularExp(float specularExp) { m_specularExp = specularExp; }
 };
 
 #endif

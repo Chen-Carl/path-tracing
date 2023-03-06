@@ -2,7 +2,7 @@
 
 Object::Object()
 {
-    m_diffuseColor = cv::Vec3f(0.2, 0.2, 0.2);
+    m_diffuseColor = cv::Vec3f(0, 0, 0);
     m_materialType = MaterialType::DIFFUSE_AND_GLOSSY;
     m_kd = 0.8;
     m_ks = 0.2;

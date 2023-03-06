@@ -17,10 +17,14 @@ int main()
     for (auto &triangle : triangles.value())
     {
         triangle.setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
+        triangle.setDiffuseColor(cv::Vec3f(0.5, 0.5, 0.5));
+        triangle.setKd(0.6);
+        triangle.setKs(0.0);
+        triangle.setSpecularExp(0.0);
         scene.add(std::make_shared<Triangle>(triangle));
     }
-    scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), 1));
-    scene.add(std::make_shared<Light>(cv::Vec3f(20, 70, 20), 1));
+    scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), cv::Vec3f(1, 1, 1)));
+    scene.add(std::make_shared<Light>(cv::Vec3f(20, 70, 20), cv::Vec3f(1, 1, 1)));
     scene.buildBVH();
 
     Camera camera = {
@@ -34,5 +38,9 @@ int main()
     Renderer renderer;
     cv::Mat3f res = renderer.render(scene);
     cv::imwrite("testBunny.png", res * 255);
+
+    // cv::Vec3f color = scene.castRay(cv::Vec3f(0, 0.1, 0.4), cv::Vec3f(0.0107603, -0.069296, -0.997538), 0);
+    // std::cout << color << std::endl;
+
     return 0;
 }

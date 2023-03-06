@@ -59,7 +59,7 @@ int main()
     cv::Mat3f res = renderer.render(scene);
     cv::imwrite("testBVHRender.png", res * 255);
 
-    // cv::Vec3f color = scene.castRay(cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, -1), 0);
+    // cv::Vec3f color = scene.castRay(cv::Vec3f(0, 0, 0), cv::Vec3f(0.109375, -0.338542, -1), 0);
     // std::cout << color << std::endl;
 
     

@@ -41,7 +41,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
         case Object::MaterialType::REFLECTION:
             {
                 float kr = zoe::fresnel(dir, hitNormal, hitObj->getIor());
-                cv::Vec3f reflectionDir = zoe::reflect(dir, hitNormal);
+                cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(dir, hitNormal));
                 cv::Vec3f reflectionRayOrig = (reflectionDir.dot(hitNormal) < 0) ? 
                         hitPoint - hitNormal * m_epsilon : 
                         hitPoint + hitNormal * m_epsilon;
@@ -90,7 +90,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
                     {
                         lightAmt += light->getIntensity() * std::max(0.0f, hitNormal.dot(lightDir));
                     }
-                    cv::Vec3f reflectionDir = zoe::reflect(-lightDir, hitNormal);
+                    cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(-lightDir, hitNormal));
                     specularColor += std::pow(std::max(0.0f, -reflectionDir.dot(dir)), hitObj->getSpecularExp()) * light->getIntensity();
                 }
                 hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)) * hitObj->getKd() + specularColor * hitObj->getKs();
@@ -211,7 +211,7 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
                     {
                         lightAmt += light->getIntensity() * std::max(0.0f, hitNormal.dot(lightDir));
                     }
-                    cv::Vec3f reflectionDir = zoe::reflect(-lightDir, hitNormal);
+                    cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(-lightDir, hitNormal));
                     specularColor += std::pow(std::max(0.0f, -reflectionDir.dot(dir)), hitObj->getSpecularExp()) * light->getIntensity();
                 }
                 hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)) * hitObj->getKd() + specularColor * hitObj->getKs();
