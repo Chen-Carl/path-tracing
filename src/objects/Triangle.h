@@ -21,10 +21,13 @@ public:
     virtual std::optional<HitPayload> intersect(const Ray &ray) const override;
 
     virtual AABB getAABB() const override;
-
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const override;
-    virtual cv::Vec2f getStCoords(const cv::Vec2f &uv) const override;
     virtual cv::Vec3f getDiffuseColor(const cv::Vec2f &st) const override;
+    virtual float getArea() const override;
+    virtual std::pair<HitPayload, float> samplePoint() const override;
+    virtual cv::Vec3f sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const override;
+
+    virtual cv::Vec2f getStCoords(const cv::Vec2f &uv) const override;
 
     // set i-th vertex coordinate
     void setVertex(int index, const cv::Vec3f &vertex) { m_vertices[index] = vertex; }

@@ -6,6 +6,7 @@ void testSolveQuad();
 void testReflect();
 void testRefract();
 void testFresnel();
+void testLocalToWorld();
 
 int main()
 {
@@ -13,6 +14,7 @@ int main()
     testReflect();
     testRefract();
     testFresnel();
+    testLocalToWorld();
     return 0;
 }
 
@@ -53,5 +55,12 @@ void testFresnel()
 {
     std::cout << "========== testFresnel ==========" << std::endl;
     float res = zoe::fresnel(cv::Vec3f(1, 1, 1), cv::Vec3f(0, 1, 0), 1.5);
+    std::cout << res << std::endl;
+}
+
+void testLocalToWorld()
+{
+    std::cout << "========== testLocalToWorld ==========" << std::endl;
+    cv::Vec3f res = zoe::localToWorld(cv::Vec3f(13, 7, 2), cv::Vec3f(2, 3, 4));
     std::cout << res << std::endl;
 }

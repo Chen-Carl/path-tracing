@@ -15,6 +15,7 @@ private:
     float m_fov = 90.0f;
     int m_maxDepth = 5;
     double m_epsilon = 0.00001;
+    float m_russianRoulette = 0.8;
     cv::Vec3f m_bgColor;
     cv::Vec3f m_eyePos;
 
@@ -26,7 +27,7 @@ public:
 
     virtual void add(std::shared_ptr<Object> object);
     virtual void add(std::shared_ptr<Light> light);
-
+    
     /**
      * @brief Cast a ray into the scene and return the color of the first object hit.
      * @param eyePos The position of the camera.
@@ -46,6 +47,15 @@ public:
     */
     virtual std::optional<HitPayload> trace(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects) const;
 
+    /**
+     * @brief Path tracing algorithm.
+     * @param eyePos The position of the camera.
+     * @param dir The direction of the ray (pixel - camera).
+     * @param depth The number of bounces of the ray.
+     * @return The color of the first object hit.
+     */
+    virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const;
+
     const cv::Vec3f &getBgColor() const { return m_bgColor; }
     double getEpsilon() const { return m_epsilon; }
     const std::vector<std::shared_ptr<Object>> &getObjects() const { return m_objects; }
@@ -55,8 +65,12 @@ public:
     float getFov() const { return m_fov; }
     int getMaxDepth() const { return m_maxDepth; }
     const cv::Vec3f &getEyePos() const { return m_eyePos; }
+    float getRussianRoulette() const { return m_russianRoulette; }
 
     void setCamera(const Camera &camera);
+
+protected:
+    std::pair<HitPayload, float> sampleLight() const;
 };
 
 class BVHScene : public Scene
@@ -72,6 +86,8 @@ public:
     void buildBVH();
 
     virtual cv::Vec3f castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const;
+
+    virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const override;
 
     friend void testSphereBVH();
 };

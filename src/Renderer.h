@@ -14,4 +14,16 @@ public:
     virtual cv::Mat3f render(const Scene &scene) const;
 };
 
+class RayTracer : public Renderer
+{
+private:
+    int m_numSamples;
+
+public:
+    RayTracer(int numSamples = 64);
+    virtual ~RayTracer() = default;
+
+    virtual cv::Mat3f render(const Scene &scene) const override;
+};
+
 #endif

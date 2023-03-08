@@ -34,7 +34,7 @@ void testSphereBVH()
 {
     BVHScene scene(1280, 900);
     std::shared_ptr<Object> sph = std::make_shared<Sphere>(cv::Vec3f(0, 0, 0), 1);
-    sph->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
+    sph->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
     sph->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
 
     scene.add(std::move(sph));

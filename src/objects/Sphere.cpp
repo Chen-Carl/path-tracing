@@ -26,9 +26,9 @@ std::optional<HitPayload> Sphere::intersect(const Ray &ray) const
         {
             return std::nullopt;
         }
-        return HitPayload(cv::Vec2f(0.0, 0.0), shared_from_this(), x2);
+        return HitPayload(cv::Vec2f(0.0, 0.0), shared_from_this(), x2, getEmission());
     }
-    return HitPayload(cv::Vec2f(0.0, 0.0), shared_from_this(), x1);
+    return HitPayload(cv::Vec2f(0.0, 0.0), shared_from_this(), x1, getEmission());
 }
 
 AABB Sphere::getAABB() const
@@ -39,8 +39,22 @@ AABB Sphere::getAABB() const
     );
 }
 
-
 cv::Vec3f Sphere::getNormal(const cv::Vec3f &point) const
 {
     return cv::normalize(point - m_center);
+}
+
+float Sphere::getArea() const
+{
+    return 4 * M_PI * m_radius * m_radius;
+}
+
+std::pair<HitPayload, float> Sphere::samplePoint() const
+{
+    return std::make_pair(HitPayload(), 1 / getArea());
+}
+
+cv::Vec3f Sphere::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const
+{
+    return cv::normalize(normal);
 }

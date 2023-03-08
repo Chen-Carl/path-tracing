@@ -14,10 +14,10 @@ set(SRC_FILE
     src/common/utils.cpp
     src/common/AABB.cpp
     src/common/BVH.cpp
+    src/objects/Material.cpp
     src/objects/Object.cpp
     src/objects/Sphere.cpp
     src/objects/Triangle.cpp
-    src/objects/MeshTriangles.cpp
     src/Light.cpp
     src/Scene.cpp
     src/Renderer.cpp
@@ -64,6 +64,10 @@ target_link_libraries(testTriangle ${OpenCV_LIBS} rayTracing)
 add_executable(testAABB tests/testAABB.cpp)
 add_dependencies(testAABB rayTracing)
 target_link_libraries(testAABB ${OpenCV_LIBS} rayTracing)
+
+add_executable(testCornellBox tests/testCornellBox.cpp)
+add_dependencies(testCornellBox rayTracing)
+target_link_libraries(testCornellBox ${OpenCV_LIBS} rayTracing)
 
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

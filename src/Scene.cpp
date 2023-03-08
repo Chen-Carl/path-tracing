@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <numeric>
 #include "common/utils.h"
 #include "Scene.h"
 
@@ -8,6 +9,28 @@ Scene::Scene(int width, int height) :
 {
     m_objects = std::vector<std::shared_ptr<Object>>();
     m_lights = std::vector<std::shared_ptr<Light>>();
+}
+
+std::pair<HitPayload, float> Scene::sampleLight() const
+{
+    float p = zoe::randomFloat() * std::accumulate(m_objects.begin(), m_objects.end(), 0.0f, [](float sum, const std::shared_ptr<Object> &obj) {
+        return sum + (obj->emissive() ? obj->getArea() : 0.0f);
+    });
+
+    float emitArea = 0;
+    for (const auto &obj : m_objects) 
+    {
+        if (obj->emissive()) 
+        {
+            emitArea += obj->getArea();
+            if (p <= emitArea) 
+            {
+                return obj->samplePoint();
+            }
+        }
+    }
+    throw std::runtime_error("No light found");
+    return std::make_pair(HitPayload(), 0.0f);
 }
 
 void Scene::add(std::shared_ptr<Object> object)
@@ -31,14 +54,14 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
     std::optional<HitPayload> payload = trace(Ray(eyePos, dir), m_objects);
     if (payload.has_value())
     {
-        auto [uv, hitObj, tNear] = payload.value();
+        auto [uv, hitObj, tNear, emission] = payload.value();
         cv::Vec3f hitPoint = eyePos + dir * tNear;
         cv::Vec3f hitNormal = hitObj->getNormal(hitPoint);
         cv::Vec2f st = hitObj->getStCoords(uv);
         switch (hitObj->getMaterialType())
         {
         // only reflection
-        case Object::MaterialType::REFLECTION:
+        case Material::MaterialType::REFLECTION:
             {
                 float kr = zoe::fresnel(dir, hitNormal, hitObj->getIor());
                 cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(dir, hitNormal));
@@ -49,7 +72,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
                 break;
             }
         // reflection + refraction
-        case Object::MaterialType::REFLECTION_AND_REFRACTION:
+        case Material::MaterialType::REFLECTION_AND_REFRACTION:
             {
                 cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(dir, hitNormal));
                 cv::Vec3f refractionDir = cv::normalize(zoe::refract(dir, hitNormal, hitObj->getIor()));
@@ -79,7 +102,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
                     std::optional<HitPayload> payload = trace(Ray(shadowOrig, lightDir), m_objects);
                     if (payload.has_value())
                     {
-                        auto [uv, hitObj, tNear] = payload.value();
+                        auto [uv, hitObj, tNear, emission] = payload.value();
                         if (cv::norm(tNear) >= cv::norm(light->getPos() - hitPoint))
                         {
                             // is shadow
@@ -93,7 +116,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
                     cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(-lightDir, hitNormal));
                     specularColor += std::pow(std::max(0.0f, -reflectionDir.dot(dir)), hitObj->getSpecularExp()) * light->getIntensity();
                 }
-                hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)) * hitObj->getKd() + specularColor * hitObj->getKs();
+                hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)).mul(hitObj->getKd()) + specularColor.mul(hitObj->getKs());
                 break;
             }
         }
@@ -110,7 +133,7 @@ std::optional<HitPayload> Scene::trace(const Ray &ray, const std::vector<std::sh
         auto res = obj->intersect(ray);
         if (res.has_value())
         {
-            if (res->dist < nearest)
+            if (res->dist > zoe::epsilon && res->dist < nearest)
             {
                 nearest = res->dist;
                 hitPayload = res.value();
@@ -118,6 +141,61 @@ std::optional<HitPayload> Scene::trace(const Ray &ray, const std::vector<std::sh
         }
     }
     return hitPayload;
+}
+
+cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const
+{
+    cv::Vec3f directLight;
+    cv::Vec3f indirectLight;
+    std::optional<HitPayload> payload = trace(Ray(eyePos, dir), m_objects);
+    if (payload.has_value())
+    {
+        if(payload->emission != cv::Vec3f(0, 0, 0))
+        {
+            return payload->emission;
+        }
+
+        auto [uv, hitObj, tNear, emission] = payload.value();
+        cv::Vec3f hitPoint = payload->point;
+        cv::Vec3f hitNormal = cv::normalize(hitObj->getNormal(hitPoint));
+
+        // sample the light
+        auto [light, lightPdf] = sampleLight();
+        cv::Vec3f lightPos = light.point;
+        // from light to object
+        cv::Vec3f lightDir = cv::normalize(hitPoint - lightPos);
+        cv::Vec3f lightNormal = cv::normalize(light.hitObj->getNormal(lightPos));
+        float dis = cv::norm(lightPos - hitPoint);
+
+        // direct light
+        std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir), m_objects);
+
+        // if the light is not occluded
+        if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+        {
+            lightPdf /= 2;
+            cv::Vec3f lightColor = light.emission;
+            cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
+            float cosTheta = -lightDir.dot(hitNormal);
+            float cosPhi = lightDir.dot(lightNormal);
+            directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
+        }
+
+        //indirect light
+        if(zoe::randomFloat() < getRussianRoulette())
+        {
+            cv::Vec3f wi = cv::normalize(hitObj->sampleDir(hitNormal, dir));
+            std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi), m_objects);
+            if (indirectPayload.has_value() && !indirectPayload->emissive())
+            {
+                cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                float cosTheta = wi.dot(hitNormal);
+                float pdf = zoe::uniformPdf(hitNormal, dir, wi);
+                indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * m_russianRoulette);
+            }
+        }
+    }
+    return directLight + indirectLight;
 }
 
 void Scene::setCamera(const Camera &camera)
@@ -134,7 +212,7 @@ std::optional<HitPayload> BVHScene::intersect(const Ray &ray) const
 
 BVHScene::BVHScene(int width, int height) : Scene(width, height)
 {
-    
+
 }
 
 void BVHScene::buildBVH()
@@ -153,13 +231,13 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
     std::optional<HitPayload> intersection = intersect(Ray(eyePos, dir));
     if (intersection.has_value())
     {
-        auto [uv, hitObj, tNear] = intersection.value();
+        auto [uv, hitObj, tNear, emission] = intersection.value();
         cv::Vec3f hitPoint = eyePos + dir * tNear;
         cv::Vec3f hitNormal = hitObj->getNormal(hitPoint);
         cv::Vec2f st = hitObj->getStCoords(uv);
         switch (hitObj->getMaterialType())
         {
-        case Object::MaterialType::REFLECTION:
+        case Material::MaterialType::REFLECTION:
             {
                 float kr = zoe::fresnel(dir, hitNormal, hitObj->getIor());
                 cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(dir, hitNormal));
@@ -170,7 +248,7 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
                 break;
             }
         // reflection + refraction
-        case Object::MaterialType::REFLECTION_AND_REFRACTION:
+        case Material::MaterialType::REFLECTION_AND_REFRACTION:
             {
                 cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(dir, hitNormal));
                 cv::Vec3f refractionDir = cv::normalize(zoe::refract(dir, hitNormal, hitObj->getIor()));
@@ -200,7 +278,7 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
                     std::optional<HitPayload> payload = intersect(Ray(shadowOrig, lightDir));
                     if (payload.has_value())
                     {
-                        auto [uv, hitObj, tNear] = payload.value();
+                        auto [uv, hitObj, tNear, emission] = payload.value();
                         if (cv::norm(tNear) >= cv::norm(light->getPos() - hitPoint))
                         {
                             // is shadow
@@ -214,10 +292,68 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
                     cv::Vec3f reflectionDir = cv::normalize(zoe::reflect(-lightDir, hitNormal));
                     specularColor += std::pow(std::max(0.0f, -reflectionDir.dot(dir)), hitObj->getSpecularExp()) * light->getIntensity();
                 }
-                hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)) * hitObj->getKd() + specularColor * hitObj->getKs();
+                hitColor = lightAmt.mul(hitObj->getDiffuseColor(st)).mul(hitObj->getKd()) + specularColor.mul(hitObj->getKs());
                 break;
             }
         }
     }
     return hitColor;
+}
+
+static int __count = 0;
+
+
+cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const
+{
+    cv::Vec3f directLight;
+    cv::Vec3f indirectLight;
+    std::optional<HitPayload> payload = intersect(Ray(eyePos, dir));
+    if (payload.has_value())
+    {
+        if(payload->emission != cv::Vec3f(0, 0, 0))
+        {
+            return payload->emission;
+        }
+
+        auto [uv, hitObj, tNear, emission] = payload.value();
+        cv::Vec3f hitPoint = payload->point;
+        cv::Vec3f hitNormal = cv::normalize(hitObj->getNormal(hitPoint));
+
+        // sample the light
+        auto [light, lightPdf] = sampleLight();
+        cv::Vec3f lightPos = light.point;
+        // from light to object
+        cv::Vec3f lightDir = cv::normalize(hitPoint - lightPos);
+        cv::Vec3f lightNormal = cv::normalize(light.hitObj->getNormal(lightPos));
+        float dis = cv::norm(lightPos - hitPoint);
+
+        // direct light
+        std::optional<HitPayload> shadowPayload = intersect(Ray(lightPos, lightDir));
+
+        // if the light is not occluded
+        if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+        {
+            lightPdf /= 2;
+            cv::Vec3f lightColor = light.emission;
+            cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
+            float cosTheta = -lightDir.dot(hitNormal);
+            float cosPhi = lightDir.dot(lightNormal);
+            directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
+        }
+
+        //indirect light
+        if(zoe::randomFloat() < getRussianRoulette())
+        {
+            cv::Vec3f wi = cv::normalize(hitObj->sampleDir(hitNormal, dir));
+            std::optional<HitPayload> indirectPayload = intersect(Ray(hitPoint, wi));
+            if (indirectPayload.has_value() && !indirectPayload->emissive())
+            {
+                cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                float cosTheta = wi.dot(hitNormal);
+                float pdf = zoe::uniformPdf(hitNormal, dir, wi);
+                indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+            }
+        }
+    }
+    return directLight + indirectLight;
 }

@@ -7,12 +7,12 @@ int main()
 {
     Scene scene(1280, 960);
     std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
-    sph1->setMaterialType(Object::MaterialType::DIFFUSE_AND_GLOSSY);
+    sph1->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
     sph1->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
 
     std::shared_ptr<Object> sph2 = std::make_shared<Sphere>(cv::Vec3f(0.5, -0.5, -8), 1.5);
     sph2->setIor(1.5);
-    sph2->setMaterialType(Object::MaterialType::REFLECTION_AND_REFRACTION);
+    sph2->setMaterialType(Material::MaterialType::REFLECTION_AND_REFRACTION);
 
     scene.add(std::move(sph1));
     scene.add(std::move(sph2));

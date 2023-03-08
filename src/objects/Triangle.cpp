@@ -1,6 +1,7 @@
 #include <cmath>
 #include "objects/Triangle.h"
 #include "common/OBJ_Loader.h"
+#include "common/utils.h"
 #include "Triangle.h"
 
 Triangle::Triangle()
@@ -29,12 +30,14 @@ std::optional<HitPayload> Triangle::intersect(const Ray &ray) const
     float u = tmp * s1.dot(s);
     float v = tmp * s2.dot(dir);
 
-    if (t < 0 || u < 0 || v < 0 || u + v > 1)
+    if (t < zoe::epsilon || u < 0 || v < 0 || u + v > 1)
     {
         return std::nullopt;
     }
 
-    return HitPayload(cv::Vec2f(u, v), shared_from_this(), t);
+    HitPayload res(cv::Vec2f(u, v), shared_from_this(), t, getEmission());
+    res.point = orig + t * dir;
+    return res;
 }
 
 AABB Triangle::getAABB() const
@@ -74,6 +77,38 @@ cv::Vec3f Triangle::getDiffuseColor(const cv::Vec2f &st) const
     float scale = 5;
     float pattern = (std::fmod(st[0] * scale, 1) > 0.5) ^ (std::fmod(st[1] * scale, 1) > 0.5);
     return (1 - pattern) * color1 + pattern * color2;
+}
+
+float Triangle::getArea() const
+{
+    return 0.5 * cv::norm((m_vertices[1] - m_vertices[0]).cross(m_vertices[2] - m_vertices[0]));
+}
+
+std::pair<HitPayload, float> Triangle::samplePoint() const
+{
+    float x = std::sqrt(zoe::randomFloat());
+    float y = zoe::randomFloat();
+    cv::Vec3f point = (1 - x) * m_vertices[0] 
+            + x * (1 - y) * m_vertices[1] 
+            + x * y * m_vertices[2];
+
+    HitPayload payload;
+    payload.point = point;
+    payload.hitObj = shared_from_this();
+    payload.emission = getEmission();
+    return std::make_pair(payload, 1 / getArea());
+}
+
+cv::Vec3f Triangle::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const
+{
+    assert(getMaterialType() == Material::MaterialType::DIFFUSE_AND_GLOSSY);
+    float x = zoe::randomFloat();
+    float y = zoe::randomFloat();
+    float z = std::fabs(1 - 2 * x);
+    float r = std::sqrt(1 - z * z);
+    float phi = 2 * M_PI * y;
+    cv::Vec3f localRay(r * std::cos(phi), r * std::sin(phi), z);
+    return zoe::localToWorld(localRay, normal);
 }
 
 cv::Vec2f Triangle::getStCoords(const cv::Vec2f &uv) const

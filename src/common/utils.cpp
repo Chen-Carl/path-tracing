@@ -1,4 +1,6 @@
+#include <random>
 #include "common/utils.h"
+#include "utils.h"
 
 namespace zoe {
 
@@ -84,5 +86,50 @@ float fresnel(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior)
     }
     return -1;
 }
+
+float uniformPdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo)
+{
+    return wo.dot(normal) > 0.0f ? 0.5f / M_PI : 0.0f;
+}
+
+float randomFloat()
+{
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    return dis(gen);
+}
+
+cv::Vec3f localToWorld(const cv::Vec3f &dir, const cv::Vec3f &normal)
+{
+    cv::Vec3f c;
+    if (std::fabs(normal[0]) > std::fabs(normal[1]))
+    {
+        float invLen = 1.0f / std::sqrt(normal[0] * normal[0] + normal[2] * normal[2]);
+        c = cv::Vec3f(normal[2] * invLen, 0.0f, -normal[0] * invLen);
+    }
+    else
+    {
+        float invLen = 1.0f / std::sqrt(normal[1] * normal[1] + normal[2] * normal[2]);
+        c = cv::Vec3f(0.0f, normal[2] * invLen, -normal[1] * invLen);
+    }
+    cv::Vec3f b = c.cross(normal);
+    return dir[0] * b + dir[1] * c + dir[2] * normal;
+}
+
+void updateProgress(float progress)
+{
+    int barWidth = 70;
+
+    std::cout << "[";
+    int pos = barWidth * progress;
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout.flush();
+};
 
 }

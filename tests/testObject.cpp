@@ -15,14 +15,14 @@ void testSphere()
     auto res = sph->intersect(Ray(cv::Vec3f(0, 0, 0), cv::Vec3f(1, 1, 0)));
     if (res.has_value())
     {
-        auto [t, id, uv] = res.value();
+        auto [t, id, uv, emission] = res.value();
         std::cout << "t = " << t << ", id = " << id << ", uv = " << uv << std::endl;
     }
 
     res = sph->intersect(Ray(cv::Vec3f(0, 0, 0), cv::Vec3f(1, 1, 1)));
     if (res.has_value())
     {
-        auto [t, id, uv] = res.value();
+        auto [t, id, uv, emission] = res.value();
         std::cout << "t = " << t << ", id = " << id << ", uv = " << uv << std::endl;
     }
 }

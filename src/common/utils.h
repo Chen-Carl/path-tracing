@@ -7,6 +7,8 @@
 
 namespace zoe {
 
+const float epsilon = 0.01;
+
 float deg2rad(float deg);
 
 /**
@@ -27,6 +29,14 @@ cv::Vec3f refract(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior);
  * @param ior the material refractive index
  */
 float fresnel(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior);
+
+float uniformPdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo);
+
+float randomFloat();
+
+cv::Vec3f localToWorld(const cv::Vec3f &dir, const cv::Vec3f &normal);
+
+void updateProgress(float progress);
 
 }
 
