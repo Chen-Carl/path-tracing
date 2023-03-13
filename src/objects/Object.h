@@ -33,7 +33,6 @@ public:
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const = 0;
     virtual float getArea() const = 0;
     virtual std::pair<HitPayload, float> samplePoint() const = 0;
-    virtual cv::Vec3f sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const = 0;
 
     virtual Material::MaterialType getMaterialType() const { return m_material.materialType; }
     virtual cv::Vec3f getDiffuseColor(const cv::Vec2f &st) const { return m_diffuseColor; }
@@ -43,6 +42,7 @@ public:
     virtual cv::Vec3f getKs() const { return m_material.ks; }
     virtual cv::Vec2f getStCoords(const cv::Vec2f &uv) const { return cv::Vec2f(0.0, 0.0); }
     virtual cv::Vec3f getEmission() const { return m_material.emission; }
+    virtual Material getMaterial() const { return m_material; }
 
     virtual void setMaterialType(Material::MaterialType materialType) { m_material.materialType = materialType; }
     virtual void setDiffuseColor(const cv::Vec3f &diffuseColor) { m_diffuseColor = diffuseColor; }

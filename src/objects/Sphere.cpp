@@ -53,8 +53,3 @@ std::pair<HitPayload, float> Sphere::samplePoint() const
 {
     return std::make_pair(HitPayload(), 1 / getArea());
 }
-
-cv::Vec3f Sphere::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const
-{
-    return cv::normalize(normal);
-}

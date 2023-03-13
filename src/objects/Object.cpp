@@ -1,4 +1,5 @@
 #include "Object.h"
+#include "common/utils.h"
 
 Object::Object()
 {
@@ -26,11 +27,31 @@ Object::Object(cv::Vec3f diffuseColor, Material::MaterialType materialType, floa
 
 cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const
 {
-    assert(m_material.materialType == Material::MaterialType::DIFFUSE_AND_GLOSSY);
-    double cosTheta = normal.dot(wo);
-    if (normal.dot(wo) > 0)
+    switch (m_material.materialType)
     {
-        return m_material.kd / M_PI;
+        case Material::MaterialType::DIFFUSE_AND_GLOSSY:
+        {
+            float cosTheta = normal.dot(wo);
+            if (normal.dot(wo) > 0)
+            {
+                return m_material.kd / M_PI;
+            }
+            return cv::Vec3f(0, 0, 0);
+        }
+        case Material::MaterialType::REFLECTION:
+        {
+            float cosTheta = normal.dot(wo);
+            if (normal.dot(wo) > 0)
+            {
+                float kr = zoe::fresnel(wi, normal, getIor());
+                if (cosTheta < 0.001)
+                {
+                    return cv::Vec3f(0, 0, 0);
+                }
+                return cv::Vec3f(kr / cosTheta, kr / cosTheta, kr / cosTheta);
+            }
+            return cv::Vec3f(0, 0, 0);
+        }
     }
     return cv::Vec3f(0, 0, 0);
 }

@@ -19,7 +19,6 @@ public:
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const override;
     virtual float getArea() const override;
     virtual std::pair<HitPayload, float> samplePoint() const override;
-    virtual cv::Vec3f sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const override;
 };
 
 #endif

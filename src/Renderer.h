@@ -17,10 +17,11 @@ public:
 class RayTracer : public Renderer
 {
 private:
-    int m_numSamples;
+    int m_spp;
+    int m_thread;
 
 public:
-    RayTracer(int numSamples = 64);
+    RayTracer(int spp = 32, int thread = 1);
     virtual ~RayTracer() = default;
 
     virtual cv::Mat3f render(const Scene &scene) const override;

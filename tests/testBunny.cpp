@@ -1,12 +1,14 @@
 #include "common/Camera.h"
+#include "common/Light.h"
 #include "objects/Triangle.h"
 #include "Scene.h"
-#include "Light.h"
 #include "Renderer.h"
 
 int main()
 {
-    BVHScene scene(1280, 960);
+    Camera camera(1280, 960, 45.0f);
+    camera.eyePos = cv::Vec3f(0, 0.1, 0.4);
+    BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
 
     std::optional<std::vector<Triangle>> triangles = Triangle::loadModel("models/bunny/bunny.obj");
     if (!triangles.has_value())
@@ -26,13 +28,7 @@ int main()
     scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), cv::Vec3f(1, 1, 1)));
     scene.add(std::make_shared<Light>(cv::Vec3f(20, 70, 20), cv::Vec3f(1, 1, 1)));
 
-    Camera camera = {
-        cv::Vec3f(0.843137, 0.67451, 0.235294),
-        cv::Vec3f(0, 0.1, 0.4),
-        45.0
-    };
-
-    scene.setCamera(camera);
+    scene.buildBVH();
 
     Renderer renderer;
     cv::Mat3f res = renderer.render(scene);

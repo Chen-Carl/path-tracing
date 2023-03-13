@@ -5,8 +5,10 @@
 
 int main(int argc, char** argv)
 {
-    // Change the definition here to change resolution
-    BVHScene scene(600, 600);
+    Camera camera(400, 400, 40.0f);
+    camera.eyePos = cv::Vec3f(278, 273, -800);
+
+    BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
 
     auto floor = Triangle::loadModel("models/cornellbox/floor.obj");
     auto shortbox = Triangle::loadModel("models/cornellbox/shortbox.obj");
@@ -24,22 +26,15 @@ int main(int argc, char** argv)
 
     XX(floor, white);
     XX(shortbox, white);
-    XX(tallbox, white);
+    XX(tallbox, mirror);
     XX(left, red);
     XX(right, green);
     XX(lights, light);
 #undef XX
 
-    Camera camera {
-        cv::Vec3f(0.843137, 0.67451, 0.235294),
-        cv::Vec3f(278, 273, -800),
-        40.0
-    };
-
-    scene.setCamera(camera);
     scene.buildBVH();
 
-    RayTracer renderer(64);
+    RayTracer renderer(32, 8);
     cv::Mat3f res = renderer.render(scene);
     cv::imwrite("testCornellBox.png", res * 255);
 

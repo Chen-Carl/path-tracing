@@ -4,6 +4,8 @@
 #include <cmath>
 #include <optional>
 #include <opencv2/opencv.hpp>
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_bar.hpp>
 
 namespace zoe {
 
@@ -30,13 +32,13 @@ cv::Vec3f refract(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior);
  */
 float fresnel(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior);
 
-float uniformPdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo);
-
 float randomFloat();
 
 cv::Vec3f localToWorld(const cv::Vec3f &dir, const cv::Vec3f &normal);
 
 void updateProgress(float progress);
+
+indicators::ProgressBar createProgressBar(const std::string &&desc, size_t barWidth);
 
 }
 

@@ -5,7 +5,8 @@
 
 int main()
 {
-    Scene scene(1280, 960);
+    Camera camera(1280, 960, 90.0f);
+    Scene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
     std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
     sph1->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
     sph1->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
@@ -17,18 +18,10 @@ int main()
     scene.add(std::move(sph1));
     scene.add(std::move(sph2));
 
-    Camera camera {
-        cv::Vec3f(0.843137, 0.67451, 0.235294),
-        cv::Vec3f(0, 0, 0),
-        90.0f
-    };
-
-    scene.setCamera(camera);
-
     scene.add(std::make_shared<Light>(cv::Vec3f(-20, 70, 20), cv::Vec3f(0.5, 0.5, 0.5)));
     scene.add(std::make_shared<Light>(cv::Vec3f(30, 50, -12), cv::Vec3f(0.5, 0.5, 0.5)));
 
-    auto res = scene.trace(Ray(cv::Vec3f(-1.1874, 1.93103, -11.5142), cv::Vec3f(-0.116493, 0.30546, -0.965342)), scene.getObjects());
+    auto res = scene.trace(Ray(cv::Vec3f(-1.1874, 1.93103, -11.5142), cv::Vec3f(-0.116493, 0.30546, -0.965342)));
 
     if (res.has_value())
     {

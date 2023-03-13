@@ -6,7 +6,8 @@
 
 int main()
 {
-    Scene scene(1280, 960);
+    Camera camera(1280, 960, 90.0f);
+    Scene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
     std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
     sph1->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
     sph1->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
@@ -17,14 +18,6 @@ int main()
 
     scene.add(std::move(sph1));
     scene.add(std::move(sph2));
-
-    Camera camera {
-        cv::Vec3f(0.843137, 0.67451, 0.235294),
-        cv::Vec3f(0, 0, 0),
-        90.0f
-    };
-
-    scene.setCamera(camera);
 
     std::vector<cv::Vec3f> vertices = {
         cv::Vec3f(-5, -3, -6),

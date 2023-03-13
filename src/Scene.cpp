@@ -3,9 +3,9 @@
 #include "common/utils.h"
 #include "Scene.h"
 
-Scene::Scene(int width, int height) : 
-    m_width(width), 
-    m_height(height)
+Scene::Scene(const Camera &camera, const cv::Vec3f &bgColor) : 
+    m_camera(camera),
+    m_bgColor(bgColor)
 {
     m_objects = std::vector<std::shared_ptr<Object>>();
     m_lights = std::vector<std::shared_ptr<Light>>();
@@ -51,7 +51,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
     }
 
     cv::Vec3f hitColor = m_bgColor;
-    std::optional<HitPayload> payload = trace(Ray(eyePos, dir), m_objects);
+    std::optional<HitPayload> payload = trace(Ray(eyePos, dir));
     if (payload.has_value())
     {
         auto [uv, hitObj, tNear, emission] = payload.value();
@@ -99,7 +99,7 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
                 for (const auto &light : m_lights)
                 {
                     cv::Vec3f lightDir = cv::normalize(light->getPos() - hitPoint);
-                    std::optional<HitPayload> payload = trace(Ray(shadowOrig, lightDir), m_objects);
+                    std::optional<HitPayload> payload = trace(Ray(shadowOrig, lightDir));
                     if (payload.has_value())
                     {
                         auto [uv, hitObj, tNear, emission] = payload.value();
@@ -124,11 +124,11 @@ cv::Vec3f Scene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int dept
     return hitColor;
 }
 
-std::optional<HitPayload> Scene::trace(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects) const
+std::optional<HitPayload> Scene::trace(const Ray &ray) const
 {
     float nearest = std::numeric_limits<float>::max();
     std::optional<HitPayload> hitPayload;
-    for (const auto &obj : objects)
+    for (const auto &obj : m_objects)
     {
         auto res = obj->intersect(ray);
         if (res.has_value())
@@ -147,7 +147,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
 {
     cv::Vec3f directLight;
     cv::Vec3f indirectLight;
-    std::optional<HitPayload> payload = trace(Ray(eyePos, dir), m_objects);
+    std::optional<HitPayload> payload = trace(Ray(eyePos, dir));
     if (payload.has_value())
     {
         if(payload->emission != cv::Vec3f(0, 0, 0))
@@ -168,7 +168,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
         float dis = cv::norm(lightPos - hitPoint);
 
         // direct light
-        std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir), m_objects);
+        std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir));
 
         // if the light is not occluded
         if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
@@ -181,16 +181,16 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
             directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
         }
 
-        //indirect light
+        // indirect light
         if(zoe::randomFloat() < getRussianRoulette())
         {
-            cv::Vec3f wi = cv::normalize(hitObj->sampleDir(hitNormal, dir));
-            std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi), m_objects);
+            cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
+            std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
             if (indirectPayload.has_value() && !indirectPayload->emissive())
             {
                 cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
                 float cosTheta = wi.dot(hitNormal);
-                float pdf = zoe::uniformPdf(hitNormal, dir, wi);
+                float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
                 indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * m_russianRoulette);
             }
         }
@@ -198,19 +198,12 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
     return directLight + indirectLight;
 }
 
-void Scene::setCamera(const Camera &camera)
-{
-    m_bgColor = camera.bgColor;
-    m_eyePos = camera.eyePos;
-    m_fov = camera.fov;
-}
-
-std::optional<HitPayload> BVHScene::intersect(const Ray &ray) const
+std::optional<HitPayload> BVHScene::trace(const Ray &ray) const
 {
     return m_bvh->intersect(ray);
 }
 
-BVHScene::BVHScene(int width, int height) : Scene(width, height)
+BVHScene::BVHScene(const Camera &camera, const cv::Vec3f &bgColor) : Scene(camera, bgColor)
 {
 
 }
@@ -228,7 +221,7 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
         return cv::Vec3f(0.0f, 0.0f, 0.0f);
     }
     cv::Vec3f hitColor = getBgColor();
-    std::optional<HitPayload> intersection = intersect(Ray(eyePos, dir));
+    std::optional<HitPayload> intersection = trace(Ray(eyePos, dir));
     if (intersection.has_value())
     {
         auto [uv, hitObj, tNear, emission] = intersection.value();
@@ -275,7 +268,7 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
                 for (const auto &light : getLights())
                 {
                     cv::Vec3f lightDir = cv::normalize(light->getPos() - hitPoint);
-                    std::optional<HitPayload> payload = intersect(Ray(shadowOrig, lightDir));
+                    std::optional<HitPayload> payload = trace(Ray(shadowOrig, lightDir));
                     if (payload.has_value())
                     {
                         auto [uv, hitObj, tNear, emission] = payload.value();
@@ -307,7 +300,7 @@ cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, i
 {
     cv::Vec3f directLight;
     cv::Vec3f indirectLight;
-    std::optional<HitPayload> payload = intersect(Ray(eyePos, dir));
+    std::optional<HitPayload> payload = trace(Ray(eyePos, dir));
     if (payload.has_value())
     {
         if(payload->emission != cv::Vec3f(0, 0, 0))
@@ -327,31 +320,54 @@ cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, i
         cv::Vec3f lightNormal = cv::normalize(light.hitObj->getNormal(lightPos));
         float dis = cv::norm(lightPos - hitPoint);
 
-        // direct light
-        std::optional<HitPayload> shadowPayload = intersect(Ray(lightPos, lightDir));
-
-        // if the light is not occluded
-        if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+        switch (hitObj->getMaterialType())
         {
-            lightPdf /= 2;
-            cv::Vec3f lightColor = light.emission;
-            cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
-            float cosTheta = -lightDir.dot(hitNormal);
-            float cosPhi = lightDir.dot(lightNormal);
-            directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
-        }
-
-        //indirect light
-        if(zoe::randomFloat() < getRussianRoulette())
-        {
-            cv::Vec3f wi = cv::normalize(hitObj->sampleDir(hitNormal, dir));
-            std::optional<HitPayload> indirectPayload = intersect(Ray(hitPoint, wi));
-            if (indirectPayload.has_value() && !indirectPayload->emissive())
+            case Material::MaterialType::DIFFUSE_AND_GLOSSY:
             {
-                cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
-                float cosTheta = wi.dot(hitNormal);
-                float pdf = zoe::uniformPdf(hitNormal, dir, wi);
-                indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+                // direct light
+                std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir));
+
+                // if the light is not occluded
+                if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+                {
+                    lightPdf /= 2;
+                    cv::Vec3f lightColor = light.emission;
+                    cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
+                    float cosTheta = -lightDir.dot(hitNormal);
+                    float cosPhi = lightDir.dot(lightNormal);
+                    directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
+                }
+
+                // indirect light
+                if(zoe::randomFloat() < getRussianRoulette())
+                {
+                    cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
+                    std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
+                    if (indirectPayload.has_value() && !indirectPayload->emissive())
+                    {
+                        cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                        float cosTheta = wi.dot(hitNormal);
+                        float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
+                        indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+                    }
+                }
+                break;
+            }
+            case Material::MaterialType::REFLECTION:
+            {
+                if (zoe::randomFloat() < getRussianRoulette())
+                {
+                    cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
+                    std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
+                    if (indirectPayload.has_value() && !indirectPayload->emissive())
+                    {
+                        cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                        float cosTheta = wi.dot(hitNormal);
+                        float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
+                        indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+                    }
+                }
+                return indirectLight;
             }
         }
     }

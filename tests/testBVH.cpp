@@ -1,4 +1,5 @@
 #include "common/BVH.h"
+#include "common/Camera.h"
 #include "objects/Sphere.h"
 #include "objects/Triangle.h"
 #include "Scene.h"
@@ -32,7 +33,8 @@ void testSingle()
 
 void testSphereBVH()
 {
-    BVHScene scene(1280, 900);
+    Camera camera(1280, 960, 90.0f);
+    BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
     std::shared_ptr<Object> sph = std::make_shared<Sphere>(cv::Vec3f(0, 0, 0), 1);
     sph->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
     sph->setDiffuseColor(cv::Vec3f(0.8, 0.7, 0.6));
@@ -40,7 +42,7 @@ void testSphereBVH()
     scene.add(std::move(sph));
 
     scene.buildBVH();
-    std::optional<HitPayload> res = scene.intersect(Ray(cv::Vec3f(0, 0, 0), cv::Vec3f(0.132292, 0.0427083, -1)));
+    std::optional<HitPayload> res = scene.trace(Ray(cv::Vec3f(0, 0, 0), cv::Vec3f(0.132292, 0.0427083, -1)));
     if (res.has_value())
     {
         std::cout << "Hit!" << std::endl;
@@ -53,13 +55,15 @@ void testSphereBVH()
 
 void testTriangleBVH()
 {
-    std::optional<std::vector<Triangle>> triangles = Triangle::loadModel("models/bunny.obj");
+    std::optional<std::vector<Triangle>> triangles = Triangle::loadModel("models/bunny/bunny.obj");
     if (!triangles.has_value())
     {
         std::cout << "Failed to load model" << std::endl;
         return;
     }
-    BVHScene scene(800, 600);
+
+    Camera camera(800, 600, 90.0f);
+    BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
     for (const auto &tri : triangles.value())
     {
         scene.add(std::make_shared<Triangle>(tri));

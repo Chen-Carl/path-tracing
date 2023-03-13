@@ -15,19 +15,25 @@ public:
 
 public:
     MaterialType materialType;
-    cv::Vec3f emission;         // emission intensity
-    cv::Vec3f kd;                 // Phong shading diffuse coefficient
-    cv::Vec3f ks;                 // Phong shading specular coefficient
-    float ior;                // Index of refraction
-    float specularExp;        // Controll the size of specular highlight
+    cv::Vec3f emission;             // emission intensity
+    cv::Vec3f kd;                   // Phong shading diffuse coefficient
+    cv::Vec3f ks;                   // Phong shading specular coefficient
+    cv::Vec3f tr;                   // Transmission coefficient
+    float ior;                      // Index of refraction
+    float specularExp;              // Controll the size of specular highlight
 
     Material(MaterialType materialType = MaterialType::DIFFUSE_AND_GLOSSY, 
         cv::Vec3f emission = cv::Vec3f(0, 0, 0), 
         cv::Vec3f kd = cv::Vec3f(0.8, 0.8, 0.8), 
         cv::Vec3f ks = cv::Vec3f(0.2, 0.2, 0.2), 
+        cv::Vec3f tr = cv::Vec3f(0, 0, 0),
         float specularExp = 25.0, 
         float ior = 1.3
     );
+
+    float pdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo);
+
+    cv::Vec3f sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const;
 };
 
 static Material red(Material::MaterialType::DIFFUSE_AND_GLOSSY, cv::Vec3f(0.0f), cv::Vec3f(0.05f, 0.065f, 0.63f));
@@ -38,5 +44,7 @@ static Material light(Material::MaterialType::DIFFUSE_AND_GLOSSY, (
         + 15.6f * cv::Vec3f(0.740f, 0.740f + 0.160f, 0.740f + 0.287f) 
         + 18.4f * cv::Vec3f(0.737f, 0.737f + 0.159f, 0.737f + 0.642f)
     ), cv::Vec3f(0.65f, 0.65f, 0.65f));
+static Material mirror(Material::MaterialType::REFLECTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 20.0f, 12.85f);
+static Material glass(Material::MaterialType::REFLECTION_AND_REFRACTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 0.0f, 12.85f);
 
 #endif

@@ -99,18 +99,6 @@ std::pair<HitPayload, float> Triangle::samplePoint() const
     return std::make_pair(payload, 1 / getArea());
 }
 
-cv::Vec3f Triangle::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const
-{
-    assert(getMaterialType() == Material::MaterialType::DIFFUSE_AND_GLOSSY);
-    float x = zoe::randomFloat();
-    float y = zoe::randomFloat();
-    float z = std::fabs(1 - 2 * x);
-    float r = std::sqrt(1 - z * z);
-    float phi = 2 * M_PI * y;
-    cv::Vec3f localRay(r * std::cos(phi), r * std::sin(phi), z);
-    return zoe::localToWorld(localRay, normal);
-}
-
 cv::Vec2f Triangle::getStCoords(const cv::Vec2f &uv) const
 {
     const cv::Vec2f &st0 = m_stCoords[0];

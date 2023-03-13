@@ -87,11 +87,6 @@ float fresnel(const cv::Vec3f &viewDir, const cv::Vec3f &normal, float ior)
     return -1;
 }
 
-float uniformPdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo)
-{
-    return wo.dot(normal) > 0.0f ? 0.5f / M_PI : 0.0f;
-}
-
 float randomFloat()
 {
     static std::random_device rd;
@@ -130,6 +125,25 @@ void updateProgress(float progress)
     }
     std::cout << "] " << int(progress * 100.0) << " %\r";
     std::cout.flush();
+}
+
+indicators::ProgressBar createProgressBar(const std::string &&desc, size_t barWidth)
+{
+    indicators::show_console_cursor(false);
+
+    return indicators::ProgressBar {
+        indicators::option::BarWidth{barWidth},
+        indicators::option::Start{" ["},
+        indicators::option::Fill{"█"},
+        indicators::option::Lead{"█"},
+        indicators::option::Remainder{"-"},
+        indicators::option::End{"]"},
+        indicators::option::PrefixText{desc},
+        // indicators::option::ForegroundColor{indicators::Color::yellow},
+        indicators::option::ShowElapsedTime{true},
+        indicators::option::ShowRemainingTime{true},
+        // indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+    };
 };
 
 }
