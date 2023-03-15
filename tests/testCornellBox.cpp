@@ -5,10 +5,10 @@
 
 int main(int argc, char** argv)
 {
-    Camera camera(1024, 1024, 40.0f);
+    Camera camera(480, 480, 40.0f);
     camera.eyePos = cv::Vec3f(278, 273, -800);
 
-    BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
+    Scene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
 
     auto floor = Triangle::loadModel("models/cornellbox/floor.obj");
     auto shortbox = Triangle::loadModel("models/cornellbox/shortbox.obj");
@@ -26,17 +26,15 @@ int main(int argc, char** argv)
 
     XX(floor, white);
     XX(shortbox, white);
-    XX(tallbox, mirror);
+    XX(tallbox, white);
     XX(left, red);
     XX(right, green);
     XX(lights, light);
 #undef XX
 
-    scene.buildBVH();
-
-    RayTracer renderer(2048, 8);
+    RayTracer renderer(4, 8);
     cv::Mat3f res = renderer.render(scene);
-    cv::imwrite("testCornellBox.png", res * 255);
+    cv::imwrite("output/testCornellBox.png", res * 255);
 
     return 0;
 }

@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv)
 {
-    Camera camera(400, 400, 40.0f);
+    Camera camera(120, 120, 40.0f);
     camera.eyePos = cv::Vec3f(278, 273, -800);
 
     BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
@@ -34,9 +34,9 @@ int main(int argc, char** argv)
 
     scene.buildBVH();
 
-    RayTracer renderer(32, 8);
+    RayTracer renderer(128, 12);
     cv::Mat3f res = renderer.render(scene);
-    cv::imwrite("testGlassMaterial.png", res * 255);
+    cv::imwrite("output/testBVHCornellBox.png", res * 255);
 
     return 0;
 }

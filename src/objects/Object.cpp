@@ -58,12 +58,17 @@ cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, 
             if (cosTheta > 0)
             {
                 float kr = zoe::fresnel(wi, normal, getIor());
-                return cv::Vec3f(kr / cosTheta, kr / cosTheta, kr / cosTheta).mul(m_material.tr);
+                return cv::Vec3f(kr / cosTheta, kr / cosTheta, kr / cosTheta);
             }
             else if (cosTheta < 0)
             {
                 float kt = 1 - zoe::fresnel(wi, normal, getIor());
-                return cv::Vec3f(kt / -cosTheta, kt / -cosTheta, kt / -cosTheta).mul(m_material.tr);
+                cv::Vec3f res(kt / -cosTheta, kt / -cosTheta, kt / -cosTheta);
+                if (m_material.tr != cv::Vec3f(0, 0, 0))
+                {
+                    return res.mul(m_material.tr);
+                }
+                return res;
             }
             return cv::Vec3f(0, 0, 0);
         }

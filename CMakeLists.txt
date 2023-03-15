@@ -30,29 +30,9 @@ set(SRC_FILE
 
 add_library(rayTracing SHARED ${SRC_FILE})
 
-add_executable(testUtils tests/testUtils.cpp)
-add_dependencies(testUtils rayTracing)
-target_link_libraries(testUtils ${OpenCV_LIBS} rayTracing)
-
-add_executable(testObject tests/testObject.cpp)
-add_dependencies(testObject rayTracing)
-target_link_libraries(testObject ${OpenCV_LIBS} rayTracing)
-
-add_executable(testBVH tests/testBVH.cpp)
-add_dependencies(testBVH rayTracing)
-target_link_libraries(testBVH ${OpenCV_LIBS} rayTracing)
-
 add_executable(testBunny tests/testBunny.cpp)
 add_dependencies(testBunny rayTracing)
 target_link_libraries(testBunny ${OpenCV_LIBS} rayTracing)
-
-add_executable(testTrace tests/testTrace.cpp)
-add_dependencies(testTrace rayTracing)
-target_link_libraries(testTrace ${OpenCV_LIBS} rayTracing)
-
-add_executable(testCastRay tests/testCastRay.cpp)
-add_dependencies(testCastRay rayTracing)
-target_link_libraries(testCastRay ${OpenCV_LIBS} rayTracing)
 
 add_executable(testRender tests/testRender.cpp)
 add_dependencies(testRender rayTracing)
@@ -62,29 +42,17 @@ add_executable(testBVHRender tests/testBVHRender.cpp)
 add_dependencies(testBVHRender rayTracing)
 target_link_libraries(testBVHRender ${OpenCV_LIBS} rayTracing)
 
-add_executable(testTriangle tests/testTriangle.cpp)
-add_dependencies(testTriangle rayTracing)
-target_link_libraries(testTriangle ${OpenCV_LIBS} rayTracing)
-
-add_executable(testAABB tests/testAABB.cpp)
-add_dependencies(testAABB rayTracing)
-target_link_libraries(testAABB ${OpenCV_LIBS} rayTracing)
-
 add_executable(testCornellBox tests/testCornellBox.cpp)
 add_dependencies(testCornellBox rayTracing)
 target_link_libraries(testCornellBox ${OpenCV_LIBS} rayTracing)
 
-add_executable(testGlassMaterial tests/testGlassMaterial.cpp)
-add_dependencies(testGlassMaterial rayTracing)
-target_link_libraries(testGlassMaterial ${OpenCV_LIBS} rayTracing)
+add_executable(testBVHCornellBox tests/testBVHCornellBox.cpp)
+add_dependencies(testBVHCornellBox rayTracing)
+target_link_libraries(testBVHCornellBox ${OpenCV_LIBS} rayTracing)
 
-add_executable(testXml tests/testXml.cpp)
-add_dependencies(testXml rayTracing)
-target_link_libraries(testXml ${OpenCV_LIBS} rayTracing)
-
-add_executable(testLoader tests/testLoader.cpp)
-add_dependencies(testLoader rayTracing)
-target_link_libraries(testLoader ${OpenCV_LIBS} rayTracing)
+add_executable(testCornell tests/scenes/testCornell.cpp)
+add_dependencies(testCornell rayTracing)
+target_link_libraries(testCornell ${OpenCV_LIBS} rayTracing)
 
 add_executable(testStairscase tests/testStairscase.cpp)
 add_dependencies(testStairscase rayTracing)

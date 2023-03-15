@@ -6,7 +6,7 @@
 
 int main()
 {
-    Camera camera(1280, 960, 90.0f);
+    Camera camera(640, 480, 90.0f);
     Scene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
     std::shared_ptr<Object> sph1 = std::make_shared<Sphere>(cv::Vec3f(-1, 0, -12), 2);
     sph1->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);

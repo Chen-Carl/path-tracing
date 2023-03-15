@@ -53,7 +53,7 @@ public:
      * @param depth The number of bounces of the ray.
      * @return The color of the first object hit.
      */
-    virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const;
+    virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) const;
 
     const cv::Vec3f &getBgColor() const { return m_bgColor; }
     double getEpsilon() const { return m_epsilon; }
@@ -68,6 +68,10 @@ public:
 
 protected:
     std::pair<HitPayload, float> sampleLight() const;
+
+    virtual cv::Vec3f calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &lightDir, const cv::Vec3f &lightNormal, float lightPdf, const cv::Vec3f &dir, const cv::Vec3f &hitNormal, float dis) const;
+
+    virtual cv::Vec3f calIndirectLight(const std::shared_ptr<const Object> &hitObj, const cv::Vec3f &hitNormal, const cv::Vec3f &hitPoint, const cv::Vec3f &dir, bool addDirectLight = false) const;
 };
 
 class BVHScene : public Scene
@@ -81,10 +85,6 @@ public:
     BVHScene(const Camera &camera, const cv::Vec3f &bgColor);
 
     void buildBVH();
-
-    virtual cv::Vec3f castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const;
-
-    virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const override;
 
     friend void testSphereBVH();
 };

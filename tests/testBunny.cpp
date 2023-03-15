@@ -32,7 +32,7 @@ int main()
 
     Renderer renderer;
     cv::Mat3f res = renderer.render(scene);
-    cv::imwrite("testBunny.png", res * 255);
+    cv::imwrite("output/testBunny.png", res * 255);
 
     // cv::Vec3f color = scene.castRay(cv::Vec3f(0, 0.1, 0.4), cv::Vec3f(0.0107603, -0.069296, -0.997538), 0);
     // std::cout << color << std::endl;

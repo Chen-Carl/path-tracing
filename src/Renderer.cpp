@@ -63,7 +63,7 @@ cv::Mat3f RayTracer::render(const Scene &scene) const
                 cv::Vec3f dir = cv::normalize(cv::Vec3f(-x, y, 1.0f));
                 for (int s = 0; s < m_spp; s++)
                 {
-                    frameBuffer(j, i) += scene.pathTracing(eyePos, dir, 0) / m_spp;
+                    frameBuffer(j, i) += scene.pathTracing(eyePos, dir) / m_spp;
                 }
                 bar.set_progress(((j - end + chunk) * width + i) / (float)(width * chunk) * 100.0f);
             }
