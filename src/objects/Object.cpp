@@ -31,8 +31,8 @@ cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, 
     {
         case Material::MaterialType::DIFFUSE_AND_GLOSSY:
         {
-            float cosTheta = normal.dot(wo);
-            if (normal.dot(wo) > 0)
+            float cosTheta = std::clamp(normal.dot(wo), 0.0f, 1.0f);
+            if (cosTheta > 0)
             {
                 return m_material.kd / M_PI;
             }
@@ -52,6 +52,21 @@ cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, 
             }
             return cv::Vec3f(0, 0, 0);
         }
+        case Material::MaterialType::REFLECTION_AND_REFRACTION:
+        {
+            float cosTheta = normal.dot(wo);
+            if (cosTheta > 0)
+            {
+                float kr = zoe::fresnel(wi, normal, getIor());
+                return cv::Vec3f(kr / cosTheta, kr / cosTheta, kr / cosTheta).mul(m_material.tr);
+            }
+            else if (cosTheta < 0)
+            {
+                float kt = 1 - zoe::fresnel(wi, normal, getIor());
+                return cv::Vec3f(kt / -cosTheta, kt / -cosTheta, kt / -cosTheta).mul(m_material.tr);
+            }
+            return cv::Vec3f(0, 0, 0);
+        }
     }
-    return cv::Vec3f(0, 0, 0);
+    throw std::runtime_error("Unsupported material type.");
 }

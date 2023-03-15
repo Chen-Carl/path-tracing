@@ -15,6 +15,8 @@ private:
     std::array<cv::Vec2f, 3> m_stCoords;
     // the vertex color of the triangle
     std::array<cv::Vec3f, 3> m_vColor;
+    // the normal of the triangle
+    cv::Vec3f m_normal;
 
 public:
     Triangle();

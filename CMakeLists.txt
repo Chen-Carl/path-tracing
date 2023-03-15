@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(RayTracing)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -O0 -ggdb -std=c++17")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -O3 -ggdb -std=c++17")
 
 list(APPEND CMAKE_PREFIX_PATH "/home/cll/zoe/opencv-4.x")
 find_package(OpenCV REQUIRED)
@@ -74,6 +74,10 @@ add_executable(testCornellBox tests/testCornellBox.cpp)
 add_dependencies(testCornellBox rayTracing)
 target_link_libraries(testCornellBox ${OpenCV_LIBS} rayTracing)
 
+add_executable(testGlassMaterial tests/testGlassMaterial.cpp)
+add_dependencies(testGlassMaterial rayTracing)
+target_link_libraries(testGlassMaterial ${OpenCV_LIBS} rayTracing)
+
 add_executable(testXml tests/testXml.cpp)
 add_dependencies(testXml rayTracing)
 target_link_libraries(testXml ${OpenCV_LIBS} rayTracing)
@@ -82,6 +86,9 @@ add_executable(testLoader tests/testLoader.cpp)
 add_dependencies(testLoader rayTracing)
 target_link_libraries(testLoader ${OpenCV_LIBS} rayTracing)
 
+add_executable(testStairscase tests/testStairscase.cpp)
+add_dependencies(testStairscase rayTracing)
+target_link_libraries(testStairscase ${OpenCV_LIBS} rayTracing)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

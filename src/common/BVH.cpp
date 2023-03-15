@@ -1,5 +1,6 @@
 #include <numeric>
 #include "BVH.h"
+#include "common/utils.h"
 #include "objects/Object.h"
 
 BVH::BVH(const std::vector<std::shared_ptr<Object>> &objects)
@@ -68,6 +69,17 @@ std::optional<HitPayload> BVH::intersect(const std::shared_ptr<BVHNode> &node, c
     std::optional<HitPayload> right = intersect(node->right, ray);
     if (left && right)
     {
+        if (std::abs(left->dist - right->dist) < zoe::lightFirstEpsilon)
+        {
+            if (left->emissive())
+            {
+                return left;
+            }
+            else if (right->emissive())
+            {
+                return right;
+            }
+        }
         return left->dist < right->dist ? left : right;
     }
     return left ? left : right;

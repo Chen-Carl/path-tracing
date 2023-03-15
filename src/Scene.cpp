@@ -133,7 +133,7 @@ std::optional<HitPayload> Scene::trace(const Ray &ray) const
         auto res = obj->intersect(ray);
         if (res.has_value())
         {
-            if (res->dist > zoe::epsilon && res->dist < nearest)
+            if (res->dist > zoe::selfCrossEpsilon && res->dist < nearest)
             {
                 nearest = res->dist;
                 hitPayload = res.value();
@@ -171,7 +171,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
         std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir));
 
         // if the light is not occluded
-        if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+        if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= zoe::selfCrossEpsilon)
         {
             lightPdf /= 2;
             cv::Vec3f lightColor = light.emission;
@@ -182,7 +182,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int 
         }
 
         // indirect light
-        if(zoe::randomFloat() < getRussianRoulette())
+        if (zoe::randomFloat() < getRussianRoulette())
         {
             cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
             std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
@@ -293,9 +293,6 @@ cv::Vec3f BVHScene::castRay(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int d
     return hitColor;
 }
 
-static int __count = 0;
-
-
 cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, int depth) const
 {
     cv::Vec3f directLight;
@@ -328,18 +325,18 @@ cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, i
                 std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir));
 
                 // if the light is not occluded
-                if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= 0.01)
+                if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= zoe::selfCrossEpsilon)
                 {
                     lightPdf /= 2;
                     cv::Vec3f lightColor = light.emission;
                     cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
-                    float cosTheta = -lightDir.dot(hitNormal);
-                    float cosPhi = lightDir.dot(lightNormal);
+                    float cosTheta = std::pow(std::clamp(-lightDir.dot(hitNormal), 0.0f, 1.0f), hitObj->getSpecularExp());
+                    float cosPhi = std::clamp(lightDir.dot(lightNormal), 0.0f, 1.0f);
                     directLight = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
                 }
 
                 // indirect light
-                if(zoe::randomFloat() < getRussianRoulette())
+                if (zoe::randomFloat() < getRussianRoulette())
                 {
                     cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
                     std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
@@ -359,15 +356,36 @@ cv::Vec3f BVHScene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir, i
                 {
                     cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
                     std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
-                    if (indirectPayload.has_value() && !indirectPayload->emissive())
+                    if (indirectPayload.has_value())
                     {
                         cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
                         float cosTheta = wi.dot(hitNormal);
                         float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
-                        indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+                        if (pdf > zoe::denominatorEpsilon)
+                        {
+                            indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * cosTheta / (pdf * getRussianRoulette());
+                        }
                     }
                 }
                 return indirectLight;
+            }
+            case Material::MaterialType::REFLECTION_AND_REFRACTION:
+            {
+                if (zoe::randomFloat() < getRussianRoulette())
+                {
+                    cv::Vec3f wi = cv::normalize(hitObj->getMaterial().sampleDir(hitNormal, dir));
+                    std::optional<HitPayload> indirectPayload = trace(Ray(hitPoint, wi));
+                    if (indirectPayload.has_value())
+                    {
+                        cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                        float cosTheta = wi.dot(hitNormal);
+                        float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
+                        if (pdf > zoe::denominatorEpsilon)
+                        {
+                            indirectLight = pathTracing(hitPoint, wi, depth + 1).mul(contri) * std::abs(cosTheta) / (pdf * getRussianRoulette());
+                        }
+                    }
+                }
             }
         }
     }

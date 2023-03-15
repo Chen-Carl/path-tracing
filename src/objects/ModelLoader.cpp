@@ -1,7 +1,7 @@
 #include "objects/ModelLoader.h"
 #include "ModelLoader.h"
 
-std::pair<Camera, std::map<const std::string, cv::Vec3f>> ModelLoader::loadXML(const std::string &filepath)
+std::pair<Camera, std::map<const std::string, cv::Vec3f>> ModelLoader::loadXML(const std::string &filepath, const std::string &colorFmt)
 {
     Camera camera;
     std::map<const std::string, cv::Vec3f> lights;
@@ -68,18 +68,29 @@ std::pair<Camera, std::map<const std::string, cv::Vec3f>> ModelLoader::loadXML(c
             {
                 radianceVec.push_back(std::stof(token));
             }
-            lights[mtlname] = cv::Vec3f(
-                radianceVec[0],
-                radianceVec[1],
-                radianceVec[2]
-            );
+            if (colorFmt == "bgr")
+            {
+                lights[mtlname] = cv::Vec3f(
+                    radianceVec[2], 
+                    radianceVec[1],
+                    radianceVec[0]
+                );
+            }
+            else
+            {
+                lights[mtlname] = cv::Vec3f(
+                    radianceVec[0],
+                    radianceVec[1],
+                    radianceVec[2]
+                );
+            }
         }
         node = node->NextSiblingElement();
     }
     return std::make_pair(camera, lights);
 }
 
-std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string &filename)
+std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string &filename, const std::string &colorFmt)
 {
     const std::string folder = filename.substr(0, filename.find_last_of("/\\") + 1);
     const std::string file = filename.substr(filename.find_last_of("/\\") + 1);
@@ -152,7 +163,15 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                 tinyobj::real_t red = attrib.colors[3*size_t(idx.vertex_index)+0];
                 tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
                 tinyobj::real_t blue = attrib.colors[3*size_t(idx.vertex_index)+2];
-                vcolors[v] = cv::Vec3f(red, green, blue);
+
+                if (colorFmt == "bgr")
+                {
+                    vcolors[v] = cv::Vec3f(blue, green, red);
+                }
+                else
+                {
+                    vcolors[v] = cv::Vec3f(red, green, blue);
+                }
             }
             index_offset += fv;
 
@@ -170,28 +189,61 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                 material.emission = lights[materialName];
             }
             else 
+            {   
+                if (colorFmt == "bgr")
+                {
+                    material.emission = cv::Vec3f(
+                        materials[materialId].emission[2],
+                        materials[materialId].emission[1], 
+                        materials[materialId].emission[0]
+                    );
+                }
+                else
+                {
+                    material.emission = cv::Vec3f(
+                        materials[materialId].emission[0],
+                        materials[materialId].emission[1], 
+                        materials[materialId].emission[2]
+                    );
+                }
+            }
+
+            if (colorFmt == "bgr")
             {
-                material.emission = cv::Vec3f(
-                    materials[materialId].emission[0], 
-                    materials[materialId].emission[1], 
-                    materials[materialId].emission[2]
+                material.kd = cv::Vec3f(
+                    materials[materialId].diffuse[2], 
+                    materials[materialId].diffuse[1], 
+                    materials[materialId].diffuse[0]
+                );
+                material.ks = cv::Vec3f(
+                    materials[materialId].specular[2], 
+                    materials[materialId].specular[1], 
+                    materials[materialId].specular[0]
+                );
+                material.tr = cv::Vec3f(
+                    materials[materialId].transmittance[2], 
+                    materials[materialId].transmittance[1], 
+                    materials[materialId].transmittance[0]
                 );
             }
-            material.kd = cv::Vec3f(
-                materials[materialId].diffuse[0], 
-                materials[materialId].diffuse[1], 
-                materials[materialId].diffuse[2]
-            );
-            material.ks = cv::Vec3f(
-                materials[materialId].specular[0], 
-                materials[materialId].specular[1], 
-                materials[materialId].specular[2]
-            );
-            material.tr = cv::Vec3f(
-                materials[materialId].transmittance[0], 
-                materials[materialId].transmittance[1], 
-                materials[materialId].transmittance[2]
-            );
+            else 
+            {
+                material.kd = cv::Vec3f(
+                    materials[materialId].diffuse[0], 
+                    materials[materialId].diffuse[1], 
+                    materials[materialId].diffuse[2]
+                );
+                material.ks = cv::Vec3f(
+                    materials[materialId].specular[0], 
+                    materials[materialId].specular[1], 
+                    materials[materialId].specular[2]
+                );
+                material.tr = cv::Vec3f(
+                    materials[materialId].transmittance[0], 
+                    materials[materialId].transmittance[1], 
+                    materials[materialId].transmittance[2]
+                );
+            }
             material.ior = materials[materialId].ior;
             material.specularExp = materials[materialId].shininess;
             triangle.setMaterial(material);
@@ -199,7 +251,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
             triangles.push_back(triangle);
         }
     }
-
+    std::cout << "Loaded " << triangles.size() << " triangles from " << filename << std::endl;
     return std::make_pair(triangles, camera);
 }
 

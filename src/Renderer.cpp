@@ -44,7 +44,8 @@ cv::Mat3f RayTracer::render(const Scene &scene) const
     int height = scene.getHeight();
     assert(height % m_thread == 0);
     int chunk = height / m_thread;
-    cv::Mat3f frameBuffer(height, width);
+    cv::Mat3f frameBuffer(height, width, cv::Vec3f(0.0f, 0.0f, 0.0f));
+
     float scale = std::tan(zoe::deg2rad(scene.getFov()) / 2.0f);
     cv::Vec3f eyePos = scene.getEyePos();
     float imgAspectRatio = width / static_cast<float>(height);

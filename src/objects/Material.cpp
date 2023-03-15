@@ -25,8 +25,13 @@ float Material::pdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3
         {
             return wo.dot(normal) > 0.0f ? 1.0f : 0.0f;
         }
+        case MaterialType::REFLECTION_AND_REFRACTION:
+        {
+            float fr = zoe::fresnel(wi, normal, ior);
+            return wo.dot(normal) > 0.0f ? fr : 1.0f - fr;
+        }
     }
-    return 0.0f;
+    throw std::runtime_error("Unsupported material type.");
 }
 
 cv::Vec3f Material::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const
@@ -47,6 +52,18 @@ cv::Vec3f Material::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) cons
         {
             return zoe::reflect(wi, normal);
         }
+        case Material::MaterialType::REFLECTION_AND_REFRACTION:
+        {
+            float fr = zoe::fresnel(wi, normal, ior);
+            if (zoe::randomFloat() < fr)
+            {
+                return zoe::reflect(wi, normal);
+            }
+            else
+            {
+                return zoe::refract(wi, normal, ior);
+            }
+        }
     }
-    return cv::Vec3f(0, 0, 0);
+    throw std::runtime_error("Unsupported material type.");
 }

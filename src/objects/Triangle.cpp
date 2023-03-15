@@ -12,7 +12,9 @@ Triangle::Triangle()
 Triangle::Triangle(const std::array<cv::Vec3f, 3> &vertices) :
     m_vertices(vertices)
 {
-
+    cv::Vec3f edge1 = m_vertices[1] - m_vertices[0];
+    cv::Vec3f edge2 = m_vertices[2] - m_vertices[0];
+    m_normal = cv::normalize(edge1.cross(edge2));
 }
 
 std::optional<HitPayload> Triangle::intersect(const Ray &ray) const
@@ -30,7 +32,7 @@ std::optional<HitPayload> Triangle::intersect(const Ray &ray) const
     float u = tmp * s1.dot(s);
     float v = tmp * s2.dot(dir);
 
-    if (t < zoe::epsilon || u < 0 || v < 0 || u + v > 1)
+    if (t < zoe::selfCrossEpsilon || u < 0 || v < 0 || u + v > 1)
     {
         return std::nullopt;
     }
@@ -57,6 +59,10 @@ AABB Triangle::getAABB() const
 
 cv::Vec3f Triangle::getNormal(const cv::Vec3f &point) const
 {
+    if (m_normal != cv::Vec3f(0, 0, 0))
+    {
+        return m_normal;
+    }
     cv::Vec3f v0 = m_vertices[1] - m_vertices[0];
     cv::Vec3f v1 = m_vertices[2] - m_vertices[0];
     cv::Vec3f normal = v0.cross(v1);

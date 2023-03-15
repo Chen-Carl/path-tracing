@@ -26,7 +26,7 @@ public:
         cv::Vec3f emission = cv::Vec3f(0, 0, 0), 
         cv::Vec3f kd = cv::Vec3f(0.8, 0.8, 0.8), 
         cv::Vec3f ks = cv::Vec3f(0.2, 0.2, 0.2), 
-        cv::Vec3f tr = cv::Vec3f(0, 0, 0),
+        cv::Vec3f tr = cv::Vec3f(1, 1, 1),
         float specularExp = 25.0, 
         float ior = 1.3
     );
@@ -45,6 +45,6 @@ static Material light(Material::MaterialType::DIFFUSE_AND_GLOSSY, (
         + 18.4f * cv::Vec3f(0.737f, 0.737f + 0.159f, 0.737f + 0.642f)
     ), cv::Vec3f(0.65f, 0.65f, 0.65f));
 static Material mirror(Material::MaterialType::REFLECTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 20.0f, 12.85f);
-static Material glass(Material::MaterialType::REFLECTION_AND_REFRACTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 0.0f, 12.85f);
+static Material glass(Material::MaterialType::REFLECTION_AND_REFRACTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 10.0f, 12.85f);
 
 #endif
