@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv)
 {
-    Camera camera(120, 120, 40.0f);
+    Camera camera(240, 240, 40.0f);
     camera.eyePos = cv::Vec3f(278, 273, -800);
 
     BVHScene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));

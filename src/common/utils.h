@@ -3,9 +3,13 @@
 
 #include <cmath>
 #include <optional>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
 #include <indicators/cursor_control.hpp>
 #include <indicators/progress_bar.hpp>
+
+#define OUTPUT_DEBUG_LOG false
+#define ENABLE_OPENMP true
 
 namespace zoe {
 
@@ -41,6 +45,8 @@ cv::Vec3f localToWorld(const cv::Vec3f &dir, const cv::Vec3f &normal);
 void updateProgress(float progress);
 
 indicators::ProgressBar createProgressBar(const std::string &&desc, size_t barWidth);
+
+std::string getLastFile(const std::string &directory);
 
 }
 

@@ -87,6 +87,7 @@ std::pair<Camera, std::map<const std::string, cv::Vec3f>> ModelLoader::loadXML(c
         }
         node = node->NextSiblingElement();
     }
+    camera.init();
     return std::make_pair(camera, lights);
 }
 
@@ -184,6 +185,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
             const std::string materialName = materials[materialId].name;
             Material material;
             material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
+
             if (lights.count(materialName))
             {
                 material.emission = lights[materialName];

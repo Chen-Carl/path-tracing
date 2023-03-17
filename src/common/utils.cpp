@@ -146,4 +146,18 @@ indicators::ProgressBar createProgressBar(const std::string &&desc, size_t barWi
     };
 };
 
+std::string getLastFile(const std::string &directory)
+{
+    std::string res = "";
+    for (const auto &it : std::filesystem::directory_iterator(directory))
+    {
+        if (it.is_regular_file())
+        {
+            std::string tmp = it.path().string();
+            res = (tmp.size() > res.size()) ? tmp : std::max(res, tmp);
+        }
+    }
+    return res;
+}
+
 }

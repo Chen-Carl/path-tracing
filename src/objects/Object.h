@@ -32,7 +32,7 @@ public:
     virtual AABB getAABB() const = 0;
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const = 0;
     virtual float getArea() const = 0;
-    virtual std::pair<HitPayload, float> samplePoint() const = 0;
+    virtual HitPayload samplePoint() const = 0;
 
     virtual Material::MaterialType getMaterialType() const { return m_material.materialType; }
     virtual cv::Vec3f getDiffuseColor(const cv::Vec2f &st) const { return m_diffuseColor; }

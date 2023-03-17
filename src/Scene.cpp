@@ -13,9 +13,7 @@ Scene::Scene(const Camera &camera, const cv::Vec3f &bgColor) :
 
 std::pair<HitPayload, float> Scene::sampleLight() const
 {
-    float p = zoe::randomFloat() * std::accumulate(m_objects.begin(), m_objects.end(), 0.0f, [](float sum, const std::shared_ptr<Object> &obj) {
-        return sum + (obj->emissive() ? obj->getArea() : 0.0f);
-    });
+    float prob = zoe::randomFloat() * m_totalLightArea;
 
     float emitArea = 0;
     for (const auto &obj : m_objects) 
@@ -23,19 +21,22 @@ std::pair<HitPayload, float> Scene::sampleLight() const
         if (obj->emissive()) 
         {
             emitArea += obj->getArea();
-            if (p <= emitArea) 
+            if (prob <= emitArea) 
             {
-                return obj->samplePoint();
+                return std::make_pair(obj->samplePoint(), 1 / m_totalLightArea);
             }
         }
     }
     throw std::runtime_error("No light found");
-    return std::make_pair(HitPayload(), 0.0f);
 }
 
 void Scene::add(std::shared_ptr<Object> object)
 {
     m_objects.push_back(object);
+    if (object->emissive())
+    {
+        m_totalLightArea += object->getArea();
+    }
 }
 
 void Scene::add(std::shared_ptr<Light> light)
@@ -150,7 +151,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
     std::optional<HitPayload> payload = trace(Ray(eyePos, dir));
     if (payload.has_value())
     {
-        if(payload->emission != cv::Vec3f(0, 0, 0))
+        if (payload->emission != cv::Vec3f(0, 0, 0))
         {
             return payload->emission;
         }
@@ -183,6 +184,10 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
             {
                 return calIndirectLight(hitObj, hitNormal, hitPoint, dir, true);
             }
+            default:
+            {
+                
+            }
         }
     }
     return cv::Vec3f(0, 0, 0);
@@ -194,12 +199,29 @@ cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &ligh
     // if the light is not occluded
     if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= zoe::selfCrossEpsilon)
     {
-        lightPdf /= 2;
         cv::Vec3f lightColor = light.emission;
         cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
         float cosTheta = -lightDir.dot(hitNormal);
         float cosPhi = lightDir.dot(lightNormal);
-        return lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
+#if OUTPUT_DEBUG_LOG
+        std::cout << "========== direct light ==========" << std::endl;
+        std::cout << "lightColor = " << lightColor << std::endl;
+        std::cout << "contri = " << contri << std::endl;
+        std::cout << "cosTheta = " << cosTheta << std::endl;
+        std::cout << "cosPhi = " << cosPhi << std::endl;
+        std::cout << "lightPdf = " << lightPdf << std::endl;
+        std::cout << "dis = " << dis << std::endl;
+        std::cout << "directLight = " << lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis) << std::endl;
+        std::cout << std::endl;
+#endif
+        cv::Vec3f res = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
+        float specularExp = shadowPayload->hitObj->getSpecularExp();
+        if (specularExp > zoe::denominatorEpsilon)
+        {
+            cv::Vec3f specular = std::pow(std::max(0.0f, -lightDir.dot(dir)), specularExp) * lightColor.mul(shadowPayload->hitObj->getKs()) / specularExp;
+            return res + specular;
+        }
+        return res;
     }
     return cv::Vec3f(0, 0, 0);
 }
@@ -221,7 +243,8 @@ cv::Vec3f Scene::calIndirectLight(const std::shared_ptr<const Object> &hitObj, c
                 float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
                 if (pdf > zoe::denominatorEpsilon)
                 {
-                    return pathTracing(hitPoint, wi).mul(contri) * cosTheta / (pdf * m_russianRoulette);
+                    cv::Vec3f res = pathTracing(hitPoint, wi).mul(contri) * cosTheta / (pdf * m_russianRoulette);
+                    return res;
                 }
             }
         }
@@ -240,6 +263,11 @@ cv::Vec3f Scene::calIndirectLight(const std::shared_ptr<const Object> &hitObj, c
         }
     }
     return cv::Vec3f(0, 0, 0);
+}
+
+cv::Vec3f Scene::getRay(int x, int y) const
+{
+    return m_camera.getRayDir(x, y);
 }
 
 std::optional<HitPayload> BVHScene::trace(const Ray &ray) const

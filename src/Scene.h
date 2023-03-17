@@ -20,6 +20,8 @@ private:
     std::vector<std::shared_ptr<Object>> m_objects;
     std::vector<std::shared_ptr<Light>> m_lights;
 
+    float m_totalLightArea = 0.0;
+
 public:
     Scene() { }
     Scene(const Camera &camera, const cv::Vec3f &bgColor);
@@ -55,6 +57,8 @@ public:
      */
     virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) const;
 
+    virtual cv::Vec3f getRay(int x, int y) const;
+
     const cv::Vec3f &getBgColor() const { return m_bgColor; }
     double getEpsilon() const { return m_epsilon; }
     const std::vector<std::shared_ptr<Object>> &getObjects() const { return m_objects; }
@@ -83,7 +87,6 @@ private:
 
 public:
     BVHScene(const Camera &camera, const cv::Vec3f &bgColor);
-
     void buildBVH();
 
     friend void testSphereBVH();

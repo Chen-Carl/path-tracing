@@ -7,6 +7,7 @@ void testReflect();
 void testRefract();
 void testFresnel();
 void testLocalToWorld();
+void testFilesystem();
 
 int main()
 {
@@ -15,6 +16,7 @@ int main()
     testRefract();
     testFresnel();
     testLocalToWorld();
+    testFilesystem();
     return 0;
 }
 
@@ -63,4 +65,10 @@ void testLocalToWorld()
     std::cout << "========== testLocalToWorld ==========" << std::endl;
     cv::Vec3f res = zoe::localToWorld(cv::Vec3f(13, 7, 2), cv::Vec3f(2, 3, 4));
     std::cout << res << std::endl;
+}
+
+void testFilesystem()
+{
+    std::cout << "========== testFilesystem ==========" << std::endl;
+    std::cout << zoe::getLastFile("output/cornellbox") << std::endl;
 }

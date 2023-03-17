@@ -49,7 +49,7 @@ float Sphere::getArea() const
     return 4 * M_PI * m_radius * m_radius;
 }
 
-std::pair<HitPayload, float> Sphere::samplePoint() const
+HitPayload Sphere::samplePoint() const
 {
-    return std::make_pair(HitPayload(), 1 / getArea());
+    return HitPayload();
 }

@@ -6,12 +6,15 @@
 
 int main()
 {
-    BVHScene scene = ModelLoader::loadBVHScene("models/cornellbox-tc/cornell-box.obj");
+    std::string sceneName = "models/cornellbox-tc/cornell-box.obj";
+    std::string ckpt = "output/cornellbox/testCornell-8.png";
+
+    BVHScene scene = ModelLoader::loadBVHScene(sceneName);
     scene.buildBVH();
 
-    RayTracer renderer(4, 32);
+    RayTracer renderer(512, 16);
     cv::Mat3f image = renderer.render(scene);
-    cv::imwrite("assets/cornellbox/testCornell-4.png", image * 255);
+    cv::imwrite("output/cornellbox/testCornell-16.png", image * 255);
 
     return 0;
 }

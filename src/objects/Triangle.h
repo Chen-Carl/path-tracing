@@ -28,7 +28,7 @@ public:
     virtual cv::Vec3f getNormal(const cv::Vec3f &point) const override;
     virtual cv::Vec3f getDiffuseColor(const cv::Vec2f &st) const override;
     virtual float getArea() const override;
-    virtual std::pair<HitPayload, float> samplePoint() const override;
+    virtual HitPayload samplePoint() const override;
 
     virtual cv::Vec2f getStCoords(const cv::Vec2f &uv) const override;
 

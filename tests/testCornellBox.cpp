@@ -5,8 +5,7 @@
 
 int main(int argc, char** argv)
 {
-    Camera camera(480, 480, 40.0f);
-    camera.eyePos = cv::Vec3f(278, 273, -800);
+    Camera camera(120, 120, 40.0f, cv::Vec3f(275, 274, -800), cv::Vec3f(275, 274, -799), cv::Vec3f(0, 1, 0));
 
     Scene scene(camera, cv::Vec3f(0.843137, 0.67451, 0.235294));
 
@@ -32,7 +31,7 @@ int main(int argc, char** argv)
     XX(lights, light);
 #undef XX
 
-    RayTracer renderer(4, 8);
+    RayTracer renderer(1, 8);
     cv::Mat3f res = renderer.render(scene);
     cv::imwrite("output/testCornellBox.png", res * 255);
 

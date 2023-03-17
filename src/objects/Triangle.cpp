@@ -90,7 +90,7 @@ float Triangle::getArea() const
     return 0.5 * cv::norm((m_vertices[1] - m_vertices[0]).cross(m_vertices[2] - m_vertices[0]));
 }
 
-std::pair<HitPayload, float> Triangle::samplePoint() const
+HitPayload Triangle::samplePoint() const
 {
     float x = std::sqrt(zoe::randomFloat());
     float y = zoe::randomFloat();
@@ -102,7 +102,7 @@ std::pair<HitPayload, float> Triangle::samplePoint() const
     payload.point = point;
     payload.hitObj = shared_from_this();
     payload.emission = getEmission();
-    return std::make_pair(payload, 1 / getArea());
+    return payload;
 }
 
 cv::Vec2f Triangle::getStCoords(const cv::Vec2f &uv) const
