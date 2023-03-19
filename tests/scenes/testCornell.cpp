@@ -12,9 +12,9 @@ int main()
     BVHScene scene = ModelLoader::loadBVHScene(sceneName);
     scene.buildBVH();
 
-    RayTracer renderer(512, 16);
+    RayTracer renderer(4, 16);
     cv::Mat3f image = renderer.render(scene);
-    cv::imwrite("output/cornellbox/testCornell-16.png", image * 255);
+    cv::imwrite("output/cornellbox/testCornell-4.png", image * 255);
 
     return 0;
 }

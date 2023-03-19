@@ -184,9 +184,11 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
             {
                 return calIndirectLight(hitObj, hitNormal, hitPoint, dir, true);
             }
-            default:
+            case Material::MaterialType::DIFFUSE_AND_REFLECTION:
             {
-                
+                directLight = calDirectLight(lightPos, lightDir, lightNormal, lightPdf, dir, hitNormal, dis);
+                indirectLight = calIndirectLight(hitObj, hitNormal, hitPoint, dir);
+                return directLight + indirectLight;
             }
         }
     }
@@ -200,7 +202,7 @@ cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &ligh
     if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= zoe::selfCrossEpsilon)
     {
         cv::Vec3f lightColor = light.emission;
-        cv::Vec3f contri = shadowPayload->hitObj->evalLightContri(hitNormal, dir, -lightDir);
+        cv::Vec3f contri = shadowPayload->hitObj->evalLightBRDF(hitNormal, dir, -lightDir);
         float cosTheta = -lightDir.dot(hitNormal);
         float cosPhi = lightDir.dot(lightNormal);
 #if OUTPUT_DEBUG_LOG
@@ -238,7 +240,7 @@ cv::Vec3f Scene::calIndirectLight(const std::shared_ptr<const Object> &hitObj, c
             if (indirectPayload.has_value() 
                 && !indirectPayload->emissive())
             {
-                cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                cv::Vec3f contri = hitObj->evalLightBRDF(hitNormal, dir, wi);
                 float cosTheta = wi.dot(hitNormal);
                 float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
                 if (pdf > zoe::denominatorEpsilon)
@@ -252,7 +254,7 @@ cv::Vec3f Scene::calIndirectLight(const std::shared_ptr<const Object> &hitObj, c
         {
             if (indirectPayload.has_value())
             {
-                cv::Vec3f contri = hitObj->evalLightContri(hitNormal, dir, wi);
+                cv::Vec3f contri = hitObj->evalLightBRDF(hitNormal, dir, wi);
                 float cosTheta = wi.dot(hitNormal);
                 float pdf = hitObj->getMaterial().pdf(hitNormal, dir, wi);
                 if (pdf > zoe::denominatorEpsilon)

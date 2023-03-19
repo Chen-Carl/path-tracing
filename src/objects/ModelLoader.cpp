@@ -184,8 +184,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
             int materialId = shapes[s].mesh.material_ids[f];
             const std::string materialName = materials[materialId].name;
             Material material;
-            material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
-
+            
             if (lights.count(materialName))
             {
                 material.emission = lights[materialName];
@@ -248,6 +247,27 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
             }
             material.ior = materials[materialId].ior;
             material.specularExp = materials[materialId].shininess;
+
+            if (material.kd != cv::Vec3f(0, 0, 0))
+            {
+                if (material.ks != cv::Vec3f(0, 0, 0))
+                {
+                    material.materialType = Material::MaterialType::DIFFUSE_AND_REFLECTION;
+                }
+                else
+                {
+                    material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
+                }
+            }
+            else if (material.ks != cv::Vec3f(0, 0, 0))
+            {
+                material.materialType = Material::MaterialType::REFLECTION;
+                if (material.tr != cv::Vec3f(1, 1, 1))
+                {
+                    material.materialType = Material::MaterialType::REFLECTION_AND_REFRACTION;
+                }
+            }
+
             triangle.setMaterial(material);
 
             triangles.push_back(triangle);

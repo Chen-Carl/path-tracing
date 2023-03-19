@@ -10,7 +10,8 @@ public:
     {
         DIFFUSE_AND_GLOSSY,
         REFLECTION_AND_REFRACTION,
-        REFLECTION
+        REFLECTION,
+        DIFFUSE_AND_REFLECTION
     };
 
 public:
@@ -34,6 +35,10 @@ public:
     float pdf(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo);
 
     cv::Vec3f sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) const;
+
+    cv::Vec3f specularBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const;
+
+    cv::Vec3f lambertianBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const;
 };
 
 static Material red(Material::MaterialType::DIFFUSE_AND_GLOSSY, cv::Vec3f(0.0f), cv::Vec3f(0.05f, 0.065f, 0.63f));

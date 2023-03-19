@@ -25,7 +25,7 @@ Object::Object(cv::Vec3f diffuseColor, Material::MaterialType materialType, floa
     m_material.materialType = materialType;
 }
 
-cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const
+cv::Vec3f Object::evalLightBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const
 {
     switch (m_material.materialType)
     {
@@ -71,6 +71,10 @@ cv::Vec3f Object::evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, 
                 return res;
             }
             return cv::Vec3f(0, 0, 0);
+        }
+        case Material::MaterialType::DIFFUSE_AND_REFLECTION:
+        {
+            return m_material.specularBRDF(normal, wi, wo);
         }
     }
     throw std::runtime_error("Unsupported material type.");

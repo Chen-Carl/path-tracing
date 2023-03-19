@@ -21,7 +21,7 @@ public:
     Object(cv::Vec3f diffuseColor, Material::MaterialType materialType, float kd = 0.8, float ks = 0.2, float specularExp = 25.0, float ior = 1.3);
     virtual ~Object() = default;
 
-    virtual cv::Vec3f evalLightContri(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const;
+    virtual cv::Vec3f evalLightBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const;
 
     /**
      * @brief Intersect a ray with the object
