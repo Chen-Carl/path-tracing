@@ -160,4 +160,9 @@ std::string getLastFile(const std::string &directory)
     return res;
 }
 
+float roundToUnit(float x)
+{
+    return x - std::floor(x);
+}
+
 }

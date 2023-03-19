@@ -76,6 +76,25 @@ cv::Vec3f Object::evalLightBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, co
         {
             return m_material.specularBRDF(normal, wi, wo);
         }
+        case Material::MaterialType::DIFFUSE_AND_REFRACTION:
+        {
+            float cosTheta = normal.dot(wo);
+            if (cosTheta > 0)
+            {
+                return m_material.kd / M_PI;
+            }
+            else if (cosTheta < 0)
+            {
+                float kt = 1 - zoe::fresnel(wi, normal, getIor());
+                cv::Vec3f res(kt / -cosTheta, kt / -cosTheta, kt / -cosTheta);
+                if (m_material.tr != cv::Vec3f(0, 0, 0))
+                {
+                    return res.mul(m_material.tr);
+                }
+                return res;
+            }
+            return cv::Vec3f(0, 0, 0);
+        }
     }
     throw std::runtime_error("Unsupported material type.");
 }

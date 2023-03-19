@@ -48,6 +48,8 @@ indicators::ProgressBar createProgressBar(const std::string &&desc, size_t barWi
 
 std::string getLastFile(const std::string &directory);
 
+float roundToUnit(float x);
+
 }
 
 #endif

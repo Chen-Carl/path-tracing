@@ -16,6 +16,8 @@ class ModelLoader
 public:
     static std::pair<Camera, std::map<const std::string, cv::Vec3f>> loadXML(const std::string &filepath, const std::string &colorFmt = "bgr");
 
+    static std::map<std::string, cv::Mat3f> loadTexture(const std::string &folder);
+
     static std::pair<std::vector<Triangle>, Camera> loadOBJ(const std::string &filename, const std::string &colorFmt = "bgr");
 
     static BVHScene loadBVHScene(const std::string &filename);

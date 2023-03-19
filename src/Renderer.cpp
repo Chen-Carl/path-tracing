@@ -3,6 +3,7 @@
 #include <optional>
 #include <chrono>
 #include "Renderer.h"
+#include "common/Timer.h"
 #include "common/utils.h"
 
 cv::Mat3f Renderer::render(const Scene &scene, const std::string &ckpt) const
@@ -111,7 +112,7 @@ cv::Mat3f RayTracer::render(const Scene &scene, const std::string &ckpt) const
         frameBuffer = ckptFb;
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    Timer timer;
 
     int count = 0;
     int total = width * height;
@@ -136,10 +137,9 @@ cv::Mat3f RayTracer::render(const Scene &scene, const std::string &ckpt) const
         }
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    // auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::endl;
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    // std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
     return frameBuffer;
 }

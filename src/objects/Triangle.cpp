@@ -70,19 +70,29 @@ cv::Vec3f Triangle::getNormal(const cv::Vec3f &point) const
     return normal;
 }
 
-cv::Vec3f Triangle::getDiffuseColor(const cv::Vec2f &st) const
+cv::Vec3f Triangle::getDiffuseColor(const cv::Vec2f &uv) const
 {
-    cv::Vec3f color = Object::getDiffuseColor(st);
-    if (color != cv::Vec3f(0, 0, 0))
-    {
-        return color;
-    }
+    // cv::Vec3f color = Object::getDiffuseColor(uv);
+    // if (color != cv::Vec3f(0, 0, 0))
+    // {
+    //     return color;
+    // }
     
-    cv::Vec3f color1(0.031, 0.235, 0.815);
-    cv::Vec3f color2(0.231, 0.937, 0.937);
-    float scale = 5;
-    float pattern = (std::fmod(st[0] * scale, 1) > 0.5) ^ (std::fmod(st[1] * scale, 1) > 0.5);
-    return (1 - pattern) * color1 + pattern * color2;
+    // cv::Vec3f color1(0.031, 0.235, 0.815);
+    // cv::Vec3f color2(0.231, 0.937, 0.937);
+    // float scale = 5;
+    // float pattern = (std::fmod(uv[0] * scale, 1) > 0.5) ^ (std::fmod(uv[1] * scale, 1) > 0.5);
+    // return (1 - pattern) * color1 + pattern * color2;
+
+    if (getTexture() != nullptr)
+    {
+        cv::Vec2f st = getTexCoords(uv);
+        int i = static_cast<int>(st[0] * getTexture()->rows);
+        int j = static_cast<int>(st[1] * getTexture()->cols);
+        return getTexture()->at<cv::Vec3f>(i, j) / 255;
+    }
+
+    return cv::Vec3f(1, 1, 1);
 }
 
 float Triangle::getArea() const
@@ -105,11 +115,11 @@ HitPayload Triangle::samplePoint() const
     return payload;
 }
 
-cv::Vec2f Triangle::getStCoords(const cv::Vec2f &uv) const
+cv::Vec2f Triangle::getTexCoords(const cv::Vec2f &uv) const
 {
-    const cv::Vec2f &st0 = m_stCoords[0];
-    const cv::Vec2f &st1 = m_stCoords[1];
-    const cv::Vec2f &st2 = m_stCoords[2];
+    const cv::Vec2f &st0 = m_texCoords[0];
+    const cv::Vec2f &st1 = m_texCoords[1];
+    const cv::Vec2f &st2 = m_texCoords[2];
     cv::Vec2f st = (1 - uv[0] - uv[1]) * st0 + uv[0] * st1 + uv[1] * st2;
     return st;
 }

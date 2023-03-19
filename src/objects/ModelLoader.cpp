@@ -1,6 +1,28 @@
 #include "objects/ModelLoader.h"
 #include "ModelLoader.h"
 
+std::map<std::string, cv::Mat3f> ModelLoader::loadTexture(const std::string &folder)
+{
+    std::map<std::string, cv::Mat3f> textures;
+    if (!std::filesystem::exists(folder))
+    {
+        std::cout << "Folder " << folder << " does not exist" << std::endl;
+        return textures;
+    }
+
+    for (const auto &entry : std::filesystem::directory_iterator(folder))
+    {
+        const std::string filename = entry.path().string();
+        const std::string extension = filename.substr(filename.find_last_of(".") + 1);
+        if (extension == "png" || extension == "jpg")
+        {
+            const cv::Mat3f texture = cv::imread(filename, cv::IMREAD_COLOR);
+            textures[filename] = texture;
+        }
+    }
+    return textures;
+}
+
 std::pair<Camera, std::map<const std::string, cv::Vec3f>> ModelLoader::loadXML(const std::string &filepath, const std::string &colorFmt)
 {
     Camera camera;
@@ -99,6 +121,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
     const std::string xmlName = folder + modelName + ".xml";
 
     auto [camera, lights] = ModelLoader::loadXML(xmlName);
+    std::map<std::string, cv::Mat3f> textures = ModelLoader::loadTexture(folder + "textures");
 
     tinyobj::ObjReaderConfig readerConfig;
     readerConfig.mtl_search_path = "";
@@ -158,7 +181,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                 {
                     tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
                     tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
-                    vtexcoords[v] = cv::Vec2f(tx, ty);
+                    vtexcoords[v] = cv::Vec2f(zoe::roundToUnit(tx), zoe::roundToUnit(ty));
                 }
 
                 tinyobj::real_t red = attrib.colors[3*size_t(idx.vertex_index)+0];
@@ -180,11 +203,18 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
             triangle.setNormals(vnormals);
             triangle.setColors(vcolors);
             triangle.setTexCoords(vtexcoords);
-
+            
             int materialId = shapes[s].mesh.material_ids[f];
             const std::string materialName = materials[materialId].name;
             Material material;
-            
+
+            if (materials[materialId].diffuse_texname != "")
+            {
+                triangle.setTexturePath(materials[materialId].diffuse_texname);
+                std::string textureName = folder + materials[materialId].diffuse_texname;
+                triangle.setTexture(std::make_shared<const cv::Mat3f>(textures[textureName]));
+            }
+
             if (lights.count(materialName))
             {
                 material.emission = lights[materialName];
@@ -250,16 +280,17 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
 
             if (material.kd != cv::Vec3f(0, 0, 0))
             {
+                material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
                 if (material.ks != cv::Vec3f(0, 0, 0))
                 {
                     material.materialType = Material::MaterialType::DIFFUSE_AND_REFLECTION;
                 }
-                else
+                if (material.tr != cv::Vec3f(1, 1, 1))
                 {
-                    material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
+                    material.materialType = Material::MaterialType::DIFFUSE_AND_REFRACTION;
                 }
             }
-            else if (material.ks != cv::Vec3f(0, 0, 0))
+            else
             {
                 material.materialType = Material::MaterialType::REFLECTION;
                 if (material.tr != cv::Vec3f(1, 1, 1))
@@ -267,7 +298,6 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                     material.materialType = Material::MaterialType::REFLECTION_AND_REFRACTION;
                 }
             }
-            material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
 
             triangle.setMaterial(material);
 
