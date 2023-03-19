@@ -132,6 +132,7 @@ cv::Mat3f RayTracer::render(const Scene &scene, const std::string &ckpt) const
             #pragma omp critical
 #endif
             std::cout << "\r" << ++count << "/" << total << " (" << std::fixed << std::setprecision(3) << (count / (float)total * 100.0f) << "%)" << std::flush;
+            // std::cout << "frameBuffer(" << j << ", " << i << ") = " << frameBuffer(j, i) << std::endl;
         }
     }
 

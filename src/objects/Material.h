@@ -41,6 +41,8 @@ public:
     cv::Vec3f lambertianBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, const cv::Vec3f &wo) const;
 };
 
+namespace zoe {
+
 static Material red(Material::MaterialType::DIFFUSE_AND_GLOSSY, cv::Vec3f(0.0f), cv::Vec3f(0.05f, 0.065f, 0.63f));
 static Material green(Material::MaterialType::DIFFUSE_AND_GLOSSY, cv::Vec3f(0.0f), cv::Vec3f(0.091f, 0.45f, 0.14f));
 static Material white(Material::MaterialType::DIFFUSE_AND_GLOSSY, cv::Vec3f(0.0f), cv::Vec3f(0.68f, 0.71f, 0.725f));
@@ -51,5 +53,7 @@ static Material light(Material::MaterialType::DIFFUSE_AND_GLOSSY, (
     ), cv::Vec3f(0.65f, 0.65f, 0.65f));
 static Material mirror(Material::MaterialType::REFLECTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 20.0f, 12.85f);
 static Material glass(Material::MaterialType::REFLECTION_AND_REFRACTION, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.3f, 0.3f, 0.25f), cv::Vec3f(0.45f, 0.45f, 0.45f), cv::Vec3f(0.0f, 0.0f, 0.0f), 10.0f, 12.85f);
+
+}
 
 #endif

@@ -9,7 +9,7 @@ int main()
     BVHScene scene = ModelLoader::loadBVHScene("models/stairscase/stairscase.obj");
     scene.buildBVH();
 
-    RayTracer renderer(1, 1);
+    RayTracer renderer(16, 1);
     cv::Mat3f image = renderer.render(scene);
     cv::imwrite("output/stairscase/testStairscase.png", image * 255);
 

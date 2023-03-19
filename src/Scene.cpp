@@ -172,7 +172,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
         {
             case Material::MaterialType::DIFFUSE_AND_GLOSSY:
             {
-                directLight = calDirectLight(lightPos, lightDir, lightNormal, lightPdf, dir, hitNormal, dis);
+                directLight = calDirectLight(lightPos, lightDir, lightNormal, lightPdf, light.emission, dir, hitNormal, dis);
                 indirectLight = calIndirectLight(hitObj, hitNormal, hitPoint, dir);
                 return directLight + indirectLight;
             }
@@ -186,7 +186,7 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
             }
             case Material::MaterialType::DIFFUSE_AND_REFLECTION:
             {
-                directLight = calDirectLight(lightPos, lightDir, lightNormal, lightPdf, dir, hitNormal, dis);
+                directLight = calDirectLight(lightPos, lightDir, lightNormal, lightPdf, light.emission, dir, hitNormal, dis);
                 indirectLight = calIndirectLight(hitObj, hitNormal, hitPoint, dir);
                 return directLight + indirectLight;
             }
@@ -195,13 +195,13 @@ cv::Vec3f Scene::pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) cons
     return cv::Vec3f(0, 0, 0);
 }
 
-cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &lightDir, const cv::Vec3f &lightNormal, float lightPdf, const cv::Vec3f &dir, const cv::Vec3f &hitNormal, float dis) const
+cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &lightDir, const cv::Vec3f &lightNormal, float lightPdf, const cv::Vec3f &emission, const cv::Vec3f &dir, const cv::Vec3f &hitNormal, float dis) const
 {
     std::optional<HitPayload> shadowPayload = trace(Ray(lightPos, lightDir));
     // if the light is not occluded
     if (shadowPayload.has_value() && std::abs(shadowPayload->dist - dis) <= zoe::selfCrossEpsilon)
     {
-        cv::Vec3f lightColor = light.emission;
+        cv::Vec3f lightColor = emission;
         cv::Vec3f contri = shadowPayload->hitObj->evalLightBRDF(hitNormal, dir, -lightDir);
         float cosTheta = -lightDir.dot(hitNormal);
         float cosPhi = lightDir.dot(lightNormal);
@@ -217,12 +217,12 @@ cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &ligh
         std::cout << std::endl;
 #endif
         cv::Vec3f res = lightColor.mul(contri) * cosTheta * cosPhi / (lightPdf * dis * dis);
-        float specularExp = shadowPayload->hitObj->getSpecularExp();
-        if (specularExp > zoe::denominatorEpsilon)
-        {
-            cv::Vec3f specular = std::pow(std::max(0.0f, -lightDir.dot(dir)), specularExp) * lightColor.mul(shadowPayload->hitObj->getKs()) / specularExp;
-            return res + specular;
-        }
+        // float specularExp = shadowPayload->hitObj->getSpecularExp();
+        // if (specularExp > zoe::denominatorEpsilon)
+        // {
+        //     cv::Vec3f specular = std::pow(std::max(0.0f, -lightDir.dot(dir)), specularExp) * lightColor.mul(shadowPayload->hitObj->getKs()) / specularExp;
+        //     return res + specular;
+        // }
         return res;
     }
     return cv::Vec3f(0, 0, 0);

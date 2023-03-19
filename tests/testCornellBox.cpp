@@ -24,12 +24,12 @@ int main(int argc, char** argv)
         scene.add(std::make_shared<Triangle>(tri)); \
     }
 
-    XX(floor, white);
-    XX(shortbox, white);
-    XX(tallbox, white);
-    XX(left, red);
-    XX(right, green);
-    XX(lights, light);
+    XX(floor, zoe::white);
+    XX(shortbox, zoe::white);
+    XX(tallbox, zoe::white);
+    XX(left, zoe::red);
+    XX(right, zoe::green);
+    XX(lights, zoe::light);
 #undef XX
 
     RayTracer renderer(1, 8);

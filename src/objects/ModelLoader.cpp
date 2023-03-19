@@ -267,6 +267,7 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                     material.materialType = Material::MaterialType::REFLECTION_AND_REFRACTION;
                 }
             }
+            material.materialType = Material::MaterialType::DIFFUSE_AND_GLOSSY;
 
             triangle.setMaterial(material);
 

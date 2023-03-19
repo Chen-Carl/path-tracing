@@ -24,12 +24,12 @@ int main(int argc, char** argv)
         scene.add(std::make_shared<Triangle>(tri)); \
     }
 
-    XX(floor, white);
-    XX(shortbox, glass);
-    XX(tallbox, white);
-    XX(left, red);
-    XX(right, green);
-    XX(lights, light);
+    XX(floor, zoe::white);
+    XX(shortbox, zoe::glass);
+    XX(tallbox, zoe::white);
+    XX(left, zoe::red);
+    XX(right, zoe::green);
+    XX(lights, zoe::light);
 #undef XX
 
     scene.buildBVH();

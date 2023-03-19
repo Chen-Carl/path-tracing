@@ -73,7 +73,7 @@ public:
 protected:
     std::pair<HitPayload, float> sampleLight() const;
 
-    virtual cv::Vec3f calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &lightDir, const cv::Vec3f &lightNormal, float lightPdf, const cv::Vec3f &dir, const cv::Vec3f &hitNormal, float dis) const;
+    virtual cv::Vec3f calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &lightDir, const cv::Vec3f &lightNormal, float lightPdf, const cv::Vec3f &emission, const cv::Vec3f &dir, const cv::Vec3f &hitNormal, float dis) const;
 
     virtual cv::Vec3f calIndirectLight(const std::shared_ptr<const Object> &hitObj, const cv::Vec3f &hitNormal, const cv::Vec3f &hitPoint, const cv::Vec3f &dir, bool addDirectLight = false) const;
 };
