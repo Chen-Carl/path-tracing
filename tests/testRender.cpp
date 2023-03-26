@@ -34,11 +34,11 @@ int main()
 
     std::shared_ptr<Triangle> tri1 = std::make_shared<Triangle>(std::array<cv::Vec3f, 3>({vertices[0], vertices[1], vertices[3]}));
     tri1->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
-    tri1->setStCoords({stCoord[0], stCoord[1], stCoord[3]});
+    tri1->setTexCoords({stCoord[0], stCoord[1], stCoord[3]});
 
     std::shared_ptr<Triangle> tri2 = std::make_shared<Triangle>(std::array<cv::Vec3f, 3>({vertices[1], vertices[2], vertices[3]}));
     tri2->setMaterialType(Material::MaterialType::DIFFUSE_AND_GLOSSY);
-    tri2->setStCoords({stCoord[1], stCoord[2], stCoord[3]});
+    tri2->setTexCoords({stCoord[1], stCoord[2], stCoord[3]});
 
     scene.add(std::move(tri1));
     scene.add(std::move(tri2));

@@ -86,7 +86,7 @@ cv::Vec3f Material::sampleDir(const cv::Vec3f &normal, const cv::Vec3f &wi) cons
         }
         case Material::MaterialType::DIFFUSE_AND_REFRACTION:
         {
-            if (zoe::randomFloat() > 0.5)
+            if (zoe::randomFloat() > 0.9)
             {
                 float x = zoe::randomFloat();
                 float y = zoe::randomFloat();

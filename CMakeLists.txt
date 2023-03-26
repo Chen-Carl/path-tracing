@@ -51,6 +51,10 @@ add_executable(testCornellBox tests/testCornellBox.cpp)
 add_dependencies(testCornellBox rayTracing)
 target_link_libraries(testCornellBox ${OpenCV_LIBS} rayTracing)
 
+add_executable(testDebug tests/testDebug.cpp)
+add_dependencies(testDebug rayTracing)
+target_link_libraries(testDebug ${OpenCV_LIBS} rayTracing)
+
 add_executable(testBVHCornellBox tests/testBVHCornellBox.cpp)
 add_dependencies(testBVHCornellBox rayTracing)
 target_link_libraries(testBVHCornellBox ${OpenCV_LIBS} rayTracing)

@@ -27,7 +27,7 @@ std::optional<HitPayload> Triangle::intersect(const Ray &ray) const
     cv::Vec3f s1 = dir.cross(edge2);
     cv::Vec3f s2 = s.cross(edge1);
 
-    float tmp = 1.0 / s1.dot(edge1);
+    float tmp = 1.0 / (s1.dot(edge1) == 0 ? zoe::denominatorEpsilon : s1.dot(edge1));
     float t = tmp * s2.dot(edge2);
     float u = tmp * s1.dot(s);
     float v = tmp * s2.dot(dir);

@@ -74,7 +74,8 @@ cv::Vec3f Object::evalLightBRDF(const cv::Vec3f &normal, const cv::Vec3f &wi, co
         }
         case Material::MaterialType::DIFFUSE_AND_REFLECTION:
         {
-            return m_material.specularBRDF(normal, wi, wo);
+            return m_material.specularBRDF(normal, wi, wo)
+                + m_material.lambertianBRDF(normal, wi, wo);
         }
         case Material::MaterialType::DIFFUSE_AND_REFRACTION:
         {

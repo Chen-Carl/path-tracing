@@ -13,9 +13,9 @@
 
 namespace zoe {
 
-const float selfCrossEpsilon = 0.01;
-const float lightFirstEpsilon = 0.01;
-const float denominatorEpsilon = 0.00001;
+const float selfCrossEpsilon = 0.001;
+const float lightFirstEpsilon = 0.005;
+const float denominatorEpsilon = 1e-6;
 
 float deg2rad(float deg);
 
