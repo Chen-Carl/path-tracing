@@ -7,14 +7,14 @@
 int main()
 {
     std::string sceneName = "models/cornellbox-tc/cornell-box.obj";
-    std::string ckpt = "output/cornellbox/testCornell-8.png";
+    std::string ckpt = "output/cornellbox/testCornell-1024.png";
 
     BVHScene scene = ModelLoader::loadBVHScene(sceneName);
     scene.buildBVH();
 
-    RayTracer renderer(4, 16);
-    cv::Mat3f image = renderer.render(scene);
-    cv::imwrite("output/cornellbox/testCornell-4.png", image * 255);
+    RayTracer renderer(3072, 16);
+    cv::Mat3f image = renderer.render(scene, ckpt);
+    cv::imwrite("output/cornellbox/testCornell-4096.png", image * 255);
 
     return 0;
 }

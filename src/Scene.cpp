@@ -225,12 +225,6 @@ cv::Vec3f Scene::calDirectLight(const cv::Vec3f &lightPos, const cv::Vec3f &ligh
         std::cout << std::endl;
 #endif
         cv::Vec3f res = lightColor.mul(contri).mul(textureColor) * cosTheta * cosPhi / (lightPdf * dis * dis);
-        // float specularExp = shadowPayload->hitObj->getSpecularExp();
-        // if (specularExp > zoe::denominatorEpsilon)
-        // {
-        //     cv::Vec3f specular = std::pow(std::max(0.0f, -lightDir.dot(dir)), specularExp) * lightColor.mul(shadowPayload->hitObj->getKs()) / specularExp;
-        //     return res + specular;
-        // }
         return res;
     }
     return cv::Vec3f(0, 0, 0);

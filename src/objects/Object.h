@@ -16,8 +16,6 @@ private:
     std::shared_ptr<const cv::Mat3f> m_texture = nullptr;   // texture of the object
 
 public:
-    virtual void Sample(HitPayload &pos, float &pdf) {}
-    
     Object();
     Object(cv::Vec3f diffuseColor, Material material);
     Object(cv::Vec3f diffuseColor, Material::MaterialType materialType, float kd = 0.8, float ks = 0.2, float specularExp = 25.0, float ior = 1.3);

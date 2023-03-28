@@ -6,12 +6,14 @@
 
 int main()
 {
-    BVHScene scene = ModelLoader::loadBVHScene("models/veachmis/veach-mis.obj");
+    std::string sceneName = "models/veachmis/veach-mis.obj";
+    std::string ckpt = "output/veachmis/testVeach-1536.png";
+    BVHScene scene = ModelLoader::loadBVHScene(sceneName);
     scene.buildBVH();
 
-    RayTracer renderer(32, 1);
-    cv::Mat3f image = renderer.render(scene);
-    cv::imwrite("output/veachmis/testVeach-32.png", image * 255);
+    RayTracer renderer(6656, 1);
+    cv::Mat3f image = renderer.render(scene, ckpt);
+    cv::imwrite("output/veachmis/testVeach-8192.png", image * 255);
 
     return 0;
 }
