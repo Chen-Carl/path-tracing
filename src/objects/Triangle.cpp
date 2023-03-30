@@ -121,7 +121,10 @@ cv::Vec2f Triangle::getTexCoords(const cv::Vec2f &uv) const
     const cv::Vec2f &st1 = m_texCoords[1];
     const cv::Vec2f &st2 = m_texCoords[2];
     cv::Vec2f st = (1 - uv[0] - uv[1]) * st0 + uv[0] * st1 + uv[1] * st2;
-    return st;
+    return cv::Vec2f(
+        zoe::roundToUnit(st[0]),
+        zoe::roundToUnit(st[1])
+    );
 }
 
 std::optional<std::vector<Triangle>> Triangle::loadModel(const std::string &filepath)

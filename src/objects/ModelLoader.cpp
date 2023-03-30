@@ -181,12 +181,12 @@ std::pair<std::vector<Triangle>, Camera> ModelLoader::loadOBJ(const std::string 
                 {
                     tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
                     tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
-                    vtexcoords[v] = cv::Vec2f(zoe::roundToUnit(tx), zoe::roundToUnit(ty));
+                    vtexcoords[v] = cv::Vec2f(tx, ty);
                 }
 
-                tinyobj::real_t red = attrib.colors[3*size_t(idx.vertex_index)+0];
-                tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-                tinyobj::real_t blue = attrib.colors[3*size_t(idx.vertex_index)+2];
+                tinyobj::real_t red = attrib.colors[3 * size_t(idx.vertex_index) + 0];
+                tinyobj::real_t green = attrib.colors[3 * size_t(idx.vertex_index) + 1];
+                tinyobj::real_t blue = attrib.colors[3 * size_t(idx.vertex_index) + 2];
 
                 if (colorFmt == "bgr")
                 {

@@ -1,8 +1,10 @@
+# 路径追踪
+
 # 1 Introduction
 
-本项目基于Games101课程作业7的框架，在此之上进行修改。
+实现了CPU模拟的蒙特卡洛路径追踪的渲染器。
 
-Games101框架：https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html
+参考资料：https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html
 
 依赖库包括加载OBJ和MTL文件的tinyobjloader，解析xml文件的tinyxml2，以及可选的进度条库indicators：
 - tinyobjloader：https://github.com/tinyobjloader/tinyobjloader
@@ -11,7 +13,11 @@ Games101框架：https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html
 
 ## 1.1 开发环境
 
-
+- ubuntu 20.04
+- cmake version 3.16.3
+- gcc version 9.4.0
+- opencv-4.x
+- gcc openmp
 
 ## 1.2 主要目录结构说明
 
@@ -47,7 +53,7 @@ int main()
 }
 ```
 
-# 2 Implementation
+# 2 Classes
 
 ## 2.1 材质类
 
@@ -92,7 +98,7 @@ virtual std::optional<HitPayload> trace(const Ray &ray) const;
 virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) const;
 ```
 
-该函数用于路径追踪，与`castRay`类似，但采用蒙特卡洛积分方法获得颜色。
+该函数用于路径追踪，与`castRay`类似，但采用蒙特卡洛积分方法获得颜色。在该函数中也引用了光线追踪的`trace`函数。
 
 路径追踪中，将光照效果划分为直接光照与间接光照，直接光照只的是从视点看向物体，能够看到光源直接投射的反射光的颜色部分，间接光照类似于环境光照，采集各个方向上的光线颜色总和，这些颜色通过`pathTracing`函数递归调用实现。
 
@@ -108,22 +114,104 @@ virtual cv::Vec3f pathTracing(const cv::Vec3f &eyePos, const cv::Vec3f &dir) con
 
 使用递归构建BVH，根据空间中跨度最大的轴划分物体。求交的逻辑中，需要判断场景是否与光线求交。场景由BVH表达，因此将调用BVH的`intersect`函数，而BVH会首先判断是否与节点包围盒相交，这里又调用了AABB的`intersect`函数，如果相交，则判断与哪个子节点相交。最后，如果没有子节点了，就代表光线与当前节点的物体相交，再调用`object`动态绑定的`intersect`函数，完成求交计算的逻辑。
 
-# 3 Evaluation
+BVH结点结构如下所示，Object只存在于叶子结点，AABB则是当前结点与所有孩子结点的AABB之和。
 
-## 3.1 Cornell Box
+``` cpp
+class BVHNode
+{
+public:
+    std::shared_ptr<Object> obj = nullptr;
+    std::shared_ptr<BVHNode> left = nullptr;
+    std::shared_ptr<BVHNode> right = nullptr;
+    AABB aabb;
+};
+```
+
+# 3 Implementation
+
+## 3.1 ModelLoader
+
+首先ModelLoader类加载模型。一个完整的模型包含4个部分：
+- .xml文件包含了视点和光源信息
+- .obj文件包含了模型定义
+- .mtl文件包含了材质定义
+- texture包含了纹理文件
+
+文件的处理由ModelLoader类完成，类中定义了静态方法用于加载模型，并生成`BVHScene`。
+
+![](assets/ModelLoader.png)
+
+## 3.2 Renderer和Scene的渲染过程
+
+`Renderer`利用`Scene`提供了`pathTracing`方法可以很方便地逐像素渲染，其中`m_spp`代表了每个像素的采样次数，伪代码描述如下：
+
+``` cpp
+for (int j = 0; j < height; j++)
+{
+    for (int i = 0; i < width; i++)
+    {
+        for (int s = 0; s < m_spp; s++)
+        {
+            frameBuffer(j, i) += scene.pathTracing(eyePos, dir) / m_spp;
+        }
+    }
+}
+```
+
+实现时，加入了openmp并行优化和增量渲染优化，并使用计时器`Timer`类统计渲染时间。
+
+可见，`pathTracing`方法是实现的关键。它分为以下几步：
+1. 获取视点发出光线看到的物体
+2. 按面积采样场景光源，从光源看向物体
+3. 根据看到物体的材质类型和渲染方程得到光照模型，计算像素颜色
+
+光照模型分为直接光与间接光，若从光源看向物体的路径没有被其他物体遮挡，则同时存在直接光和间接光，否则只存在间接光。直接光的计算利用了蒙特卡洛路径积分，间接光的计算相当于把各个方向看到的物体作为一个新的光源，物体颜色作为光源强度，再递归调用`pathTracing`。
+
+![](assets/pathTracing.png)
+
+## 3.3 纹理
+
+对纹理的不同处理方式可能得到不同的颜色结果，本次对纹理的处理解释为对光线的吸收，即对于纹理(0, 0, 1)，我们解释为完全吸收蓝色光和绿色光，完全反射红色光。这里的颜色格式采用OpenCV默认的BGR格式。除此以外，对纹理坐标的处理采取了先插值再归一化的处理。
+
+总的来说，从吸收和反射光线的角度看，增加纹理实际上是在`pathTracing`得到的颜色上乘上纹理颜色，即
+``` cpp
+color = pathTracingColor.mul(textureColor);
+```
+
+这种处理将导致stairscase中的纹理颜色与环境颜色接近，但随着采样率的提升，仍然可以看出纹理的效果。
+
+# 4 Evaluation
+
+## 4.1 Cornell Box
 
 1024 x 1024 x 512 : 2068142 ms
 
 ![](assets/cornellbox/testCornell-4096.png)
 
-## 3.2 veachmis
+## 4.2 veachmis
 
 ![](assets/veachmis/testVeach-8192.png)
 
-## 3.3 Stairscase
+## 4.3 Stairscase
 
-1280 x 720 x 8 : 1171733 ms (no BVH)
-1280 x 720 x 8 : 203645
-1280 x 720 x 16 : 2097602 ms (no BVH)
-1280 x 720 x 32 : 842816 ms
-1280 x 720 x 112 : 3282063 ms
+![](assets/stairscase/testStairscase-2176.png)
+
+渲染时间记录如下，使用BVH可以提速5到6倍。然而渲染时间仍然太久了，这里只给出spp = 2176的结果。
+
+|spp|4|8|16|32|128|
+|-|-|-|-|-|-|
+|BVH|104|203|-|843|3065|
+|no BVH|-|1172|2098|-|-|
+
+## 4.4 完美反射模型
+
+![](assets/cornellbox/reflection-2048.png)
+
+# 5 Future work
+
+由于计算资源以及ddl原因，我们将以下部分作为未来的改进工作：
+1. 增加`stairscase`场景的spp
+2. CUDA加速三角形求交运算
+3. 增加MSAA抗锯齿
+
+其中第一点和第三点不需要额外新增函数，只需要修改spp以及在伪代码中的增加逐像素随机发射光线进行超采样即可。
